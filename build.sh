@@ -21,8 +21,14 @@ mkdir -p dist
 python3 - "$WASM" <<'EOF'
 import base64, pathlib, sys
 wasm = pathlib.Path(sys.argv[1]).read_bytes()
-tpl = pathlib.Path("web/index.template.html").read_text()
+tpl = pathlib.Path("web/index.template.html").read_text(encoding="utf-8")
 out = tpl.replace("__WASM_B64__", base64.b64encode(wasm).decode())
-pathlib.Path("dist/fondue-demo.html").write_text(out)
+# The page must declare UTF-8 itself (within the first 1024 bytes), or browsers fall back to windows-1252.
+head = out.encode("utf-8")[:1024].decode("utf-8", "ignore").lower()
+assert head.startswith("<!doctype html>"), "page must start with <!doctype html>"
+assert '<meta charset="utf-8">' in head, 'page needs <meta charset="utf-8"> in its first 1024 bytes'
+pathlib.Path("dist/fondue-demo.html").write_text(out, encoding="utf-8")
 print(f"dist/fondue-demo.html  ({len(out)//1024} KB, wasm {len(wasm)//1024} KB)")
 EOF
+# Workers static assets: serve the page as text/html; charset=utf-8 (belt and braces with the meta tag).
+cp web/_headers dist/_headers
