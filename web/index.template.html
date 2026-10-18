@@ -1,0 +1,423 @@
+<title>Fondue Prototype</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700&family=Barlow:wght@400;500;600&family=JetBrains+Mono:wght@500;700&display=swap">
+<style>
+/* Layout: a kitchen datasheet. Cook controls · resolved sheet · portal, with the lockfile and event log underneath. */
+:root {
+  --bg: #FBFBF8; --panel: #FFFFFF; --ink: #17191C; --muted: #50555B; --rule: #D6D8DA; --soft: #EEEFEB;
+  --attend: #C8411B; --ok: #2F6F4E; --variant: #8A5A00; --bad: #8E3B8C; --pick: #DDE7F2; --pick-ink: #1F4E80;
+  --display: 'Barlow Condensed', 'Arial Narrow', sans-serif;
+  --body: 'Barlow', system-ui, sans-serif;
+  --mono: 'JetBrains Mono', ui-monospace, Menlo, monospace;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --bg: #141618; --panel: #1C1F22; --ink: #ECEDEA; --muted: #A5AAB0; --rule: #33373B; --soft: #23272A;
+  --attend: #FF7A52; --ok: #6CC596; --variant: #E3B256; --bad: #D88BD6; --pick: #22354A; --pick-ink: #A9CBF0; color-scheme: dark } }
+:root[data-theme="dark"] {
+  --bg: #141618; --panel: #1C1F22; --ink: #ECEDEA; --muted: #A5AAB0; --rule: #33373B; --soft: #23272A;
+  --attend: #FF7A52; --ok: #6CC596; --variant: #E3B256; --bad: #D88BD6; --pick: #22354A; --pick-ink: #A9CBF0; color-scheme: dark }
+
+body { background: var(--bg); color: var(--ink); font-family: var(--body); font-size: 15px; line-height: 1.4; }
+.wrap { max-width: 1440px; margin: 0 auto; padding-inline: 20px; padding-block: 20px 40px; display: flex; flex-direction: column; gap: 18px; }
+h1, h2, h3 { font-family: var(--display); margin: 0; text-wrap: balance; }
+h1 { font-size: 40px; line-height: 1; letter-spacing: -.005em; }
+h2 { font-size: 15px; letter-spacing: .14em; text-transform: uppercase; border-bottom: 2px solid var(--ink); padding-bottom: 4px; }
+.cap { font-family: var(--display); font-weight: 600; font-size: 12px; letter-spacing: .14em; text-transform: uppercase; color: var(--muted); }
+.mono { font-family: var(--mono); font-variant-numeric: tabular-nums; }
+.muted { color: var(--muted); }
+header { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: flex-end; gap: 12px 24px; border-bottom: 3px solid var(--ink); padding-bottom: 12px; }
+header p { margin: 4px 0 0; color: var(--muted); max-width: 70ch; }
+.stats { display: flex; flex-wrap: wrap; border: 1px solid var(--ink); }
+.stats div { padding: 6px 12px; display: flex; flex-direction: column; border-right: 1px solid var(--rule); }
+.stats div:last-child { border-right: 0; }
+.stats b { font-family: var(--mono); font-size: 17px; }
+.grid { display: grid; grid-template-columns: 300px minmax(0, 1fr) 420px; gap: 28px; align-items: start; }
+@media (max-width: 1180px) { .grid { grid-template-columns: 280px minmax(0, 1fr); } .portal { grid-column: 1 / -1; } }
+@media (max-width: 760px) { .grid { grid-template-columns: minmax(0, 1fr); } }
+section { display: flex; flex-direction: column; gap: 12px; min-width: 0; }
+.field { display: flex; flex-direction: column; gap: 6px; }
+.seg { display: flex; flex-wrap: wrap; border: 1px solid var(--ink); }
+.seg button { flex: 1 1 auto; font: 600 14px var(--body); padding: 8px 10px; min-height: 40px; border: 0; border-right: 1px solid var(--rule); background: var(--panel); color: var(--ink); cursor: pointer; }
+.seg button:last-child { border-right: 0; }
+.seg button[aria-pressed="true"] { background: var(--ink); color: var(--bg); }
+select, input[type=text] { font: 15px var(--body); padding: 7px 8px; border: 1px solid var(--ink); background: var(--panel); color: var(--ink); min-height: 40px; width: 100%; box-sizing: border-box; }
+label.chk { display: flex; gap: 8px; align-items: center; font-size: 15px; min-height: 32px; }
+label.chk input { width: 18px; height: 18px; accent-color: var(--ink); }
+button.act { font: 600 14px var(--body); padding: 6px 12px; min-height: 36px; border: 1px solid var(--ink); background: var(--panel); color: var(--ink); cursor: pointer; }
+button.act.primary { background: var(--ink); color: var(--bg); }
+button:focus-visible, select:focus-visible, input:focus-visible { outline: 3px solid var(--pick-ink); outline-offset: 1px; }
+.note { font-size: 13px; color: var(--muted); }
+
+/* the sheet */
+.node { border-top: 2px solid var(--ink); padding-top: 8px; display: flex; flex-direction: column; gap: 8px; }
+.node .node { border-top-width: 1px; margin-left: 14px; padding-left: 12px; border-left: 3px solid var(--rule); }
+.nhead { display: flex; flex-wrap: wrap; gap: 6px 10px; align-items: baseline; }
+.nname { font-family: var(--display); font-weight: 700; font-size: 24px; line-height: 1.05; }
+.node .node .nname { font-size: 19px; }
+.badge { font-family: var(--mono); font-size: 11px; font-weight: 700; padding: 1px 6px; border: 1px solid currentColor; white-space: nowrap; }
+.lvl { background: var(--ink); color: var(--bg); border-color: var(--ink); }
+.st-ok { color: var(--ok); } .st-deviates { color: var(--variant); } .st-violates, .st-blocked { color: var(--bad); } .st-unchecked { color: var(--muted); }
+.attend { color: var(--attend); font-weight: 600; }
+.slots { display: flex; flex-direction: column; }
+.slot { display: grid; grid-template-columns: 82px minmax(0, 1fr); gap: 4px 10px; padding: 5px 0; border-bottom: 1px solid var(--soft); align-items: baseline; }
+.slot .qty { font-family: var(--mono); font-weight: 700; font-size: 13px; text-align: right; }
+.slot .what { display: flex; flex-wrap: wrap; gap: 4px 8px; align-items: baseline; min-width: 0; }
+.slot.dropped { opacity: .55; }
+.slot.dropped .what > span:first-child { text-decoration: line-through; }
+.via { font-family: var(--mono); font-size: 11px; color: var(--muted); }
+.sub { color: var(--pick-ink); font-weight: 700; }
+.ask { grid-column: 2; display: flex; flex-wrap: wrap; gap: 6px; align-items: center; background: var(--pick); color: var(--pick-ink); padding: 6px 8px; }
+.ask select { width: auto; min-height: 34px; }
+.steps { display: flex; flex-direction: column; }
+.step { display: grid; grid-template-columns: 82px minmax(0, 1fr); gap: 10px; padding: 4px 0; border-bottom: 1px solid var(--soft); }
+.step .v { font-family: var(--display); font-weight: 700; font-size: 16px; letter-spacing: .03em; }
+.step .t { font-family: var(--mono); font-size: 12px; text-align: right; color: var(--muted); padding-top: 2px; }
+.deltas { display: flex; flex-direction: column; gap: 4px; }
+.delta { font-size: 13px; border: 1px dashed var(--ink); padding: 4px 8px; }
+.fold { display: flex; flex-wrap: wrap; gap: 6px 12px; align-items: center; border: 2px solid var(--ink); padding: 6px 10px; background: var(--panel); cursor: pointer; font: inherit; color: inherit; text-align: left; width: 100%; }
+.fold b { font-size: 16px; }
+
+/* portal */
+table { border-collapse: collapse; width: 100%; font-size: 14px; }
+th { text-align: left; font-family: var(--display); font-weight: 600; font-size: 12px; letter-spacing: .12em; text-transform: uppercase; color: var(--muted); border-bottom: 2px solid var(--ink); padding: 4px 6px; }
+td { border-bottom: 1px solid var(--rule); padding: 6px; vertical-align: top; }
+td.num { font-family: var(--mono); text-align: right; white-space: nowrap; }
+tr.chosen td { background: var(--pick); }
+.tablebox { overflow-x: auto; }
+.rate { display: flex; gap: 2px; }
+.rate button { font: 700 12px var(--mono); width: 26px; height: 28px; border: 1px solid var(--rule); background: var(--panel); color: var(--ink); cursor: pointer; }
+.rate button:hover { border-color: var(--ink); }
+pre { font-family: var(--mono); font-size: 12px; line-height: 1.55; margin: 0; padding: 12px; background: var(--soft); overflow-x: auto; }
+.lockline.changed { background: var(--pick); color: var(--pick-ink); }
+.bottom { display: grid; grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr); gap: 28px; }
+@media (max-width: 900px) { .bottom { grid-template-columns: minmax(0, 1fr); } }
+.toast { min-height: 20px; font-size: 13px; font-family: var(--mono); }
+.toast.err { color: var(--bad); }
+.diff { display: flex; flex-direction: column; gap: 2px; font-size: 13px; }
+.boot { padding: 20px; border: 2px dashed var(--ink); }
+@media (prefers-reduced-motion: no-preference) { .lockline.changed { transition: background .6s; } }
+</style>
+
+<div class="wrap">
+  <header>
+    <div>
+      <div class="cap">Fondue · prototype 0.1 · Rust → WASM · event-sourced</div>
+      <h1>Butter to Sunday Dinner</h1>
+      <p>One recipe graph, replayed from an event log inside your browser. Change the cook on the left and watch the sheet, the lockfile and the log respond. Nothing is stored on a server.</p>
+    </div>
+    <div class="stats" aria-live="polite">
+      <div><span class="cap">Events</span><b id="s-events">–</b></div>
+      <div><span class="cap">Revisions</span><b id="s-revs">–</b></div>
+      <div><span class="cap">Resolve</span><b id="s-ms">–</b></div>
+      <div><span class="cap">Engine</span><b id="s-wasm">–</b></div>
+    </div>
+  </header>
+
+  <div id="boot" class="boot">Loading the WASM engine…</div>
+
+  <div class="grid" id="app" hidden>
+    <section aria-labelledby="h-cook">
+      <h2 id="h-cook">Cook · patrick</h2>
+      <div class="field"><span class="cap">Open at zoom level</span><div class="seg" id="zoom"></div></div>
+      <div class="field"><label class="cap" for="canon">Canon</label>
+        <select id="canon"><option value="home">Home cooking</option><option value="classical">Classical French</option><option value="none">None / homemade</option></select>
+        <label class="chk"><input type="checkbox" id="std" checked> Also public standards (FDA/USDA)</label>
+      </div>
+      <div class="field"><span class="cap">Contract dial</span><div class="seg" id="dial"></div></div>
+      <div class="field"><label class="cap" for="p-butter">Pantry · butter</label>
+        <select id="p-butter"><option value="">Recipe default</option><option value="i:butter-salted">Salted butter</option><option value="i:kerrygold-unsalted">Kerrygold unsalted</option></select></div>
+      <div class="field"><label class="cap" for="p-milk">Swap · milk in your béchamel</label>
+        <select id="p-milk"><option value="">Recipe default</option><option value="i:oat-milk">Oat milk</option></select>
+        <span class="note">A deliberate swap, so it's a choice, not a pantry default. Try it with the Classical canon on Enforce.</span></div>
+      <div class="field"><label class="cap" for="p-cheese">Pantry · melting cheese</label>
+        <select id="p-cheese"><option value="">Recipe default</option><option value="i:cheddar-shredded">Pre-shredded cheddar</option><option value="i:velveeta">Velveeta</option></select></div>
+      <label class="chk"><input type="checkbox" id="know"> I already know béchamel (fold it)</label>
+      <p class="note">Every control here appends a <span class="mono">pref</span> event that changes one field. Cook state lives in the same log as recipes.</p>
+    </section>
+
+    <section aria-labelledby="h-sheet">
+      <h2 id="h-sheet">Resolved sheet</h2>
+      <div id="sheet"></div>
+    </section>
+
+    <section class="portal" aria-labelledby="h-portal">
+      <h2 id="h-portal">Portal · every béchamel</h2>
+      <div class="tablebox"><table>
+        <thead><tr><th>Implementation</th><th>Contract</th><th>Outcomes</th><th>Rate</th><th></th></tr></thead>
+        <tbody id="portal"></tbody>
+      </table></div>
+      <p class="note">Sorted by your first canon's preference, then by cook outcomes. Rate one to add a <span class="mono">cook_log</span>; the order updates.</p>
+
+      <h2>Publish my version</h2>
+      <form id="fork" class="field">
+        <label class="cap" for="f-name">Fork the béchamel in your mac and cheese as</label>
+        <input type="text" id="f-name" value="Patrick's Béchamel">
+        <label class="cap" for="f-ratio">Roux per cup of milk</label>
+        <select id="f-ratio"><option value="1.5">1½ Tbsp (thin)</option><option value="2">2 Tbsp (medium)</option><option value="2.5" selected>2½ Tbsp</option><option value="3">3 Tbsp (thick)</option></select>
+        <label class="cap" for="f-fat">Fat</label>
+        <select id="f-fat"><option value="i:kerrygold-unsalted">Kerrygold unsalted</option><option value="i:butter-unsalted">Butter, unsalted</option><option value="i:olive-oil-ev">Extra-virgin olive oil</option></select>
+        <div style="display:flex;gap:8px;flex-wrap:wrap"><button class="act primary" type="submit">Fork, publish and use it</button></div>
+      </form>
+
+      <h2>Competing heads</h2>
+      <p class="note" style="margin:0">Two cooks edited the same Classic Béchamel. Main follows chef-luc; the Classical canon follows chef-marie. Switch the canon to see the sheet move.</p>
+      <div class="diff" id="heads"></div>
+      <div class="toast" id="toast" role="status"></div>
+    </section>
+  </div>
+
+  <div class="bottom" id="bottom" hidden>
+    <section aria-labelledby="h-lock">
+      <h2 id="h-lock">cook.lock</h2>
+      <pre id="lock"></pre>
+      <p class="note">Every pin the sheet resolved to, with how it was chosen. Highlighted lines changed with your last action.</p>
+    </section>
+    <section aria-labelledby="h-log">
+      <h2 id="h-log">Event log · newest first</h2>
+      <pre id="log"></pre>
+      <div style="display:flex;gap:8px;flex-wrap:wrap"><button class="act" id="reset" type="button">Reset to the seed log</button></div>
+    </section>
+  </div>
+</div>
+
+<script>
+const WASM_B64 = "__WASM_B64__";
+const COOK = "patrick";
+const ZOOMS = [
+  ["i:butter-unsalted", "Butter"], ["p:bechamel-classic", "Béchamel"],
+  ["p:mac-and-cheese-nana", "Mac & Cheese"], ["g:sunday-dinner", "Sunday Dinner"]];
+const MAC = "p:mac-and-cheese-nana";
+let X, BIN, enc = new TextEncoder(), dec = new TextDecoder();
+let root = "g:sunday-dinner", lastLock = [], unfolded = new Set(), seedJson = "";
+const $ = (id) => document.getElementById(id);
+const esc = (s) => String(s ?? "").replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+
+function readOut(p) {
+  const len = new DataView(X.memory.buffer).getUint32(p, true);
+  return [dec.decode(new Uint8Array(X.memory.buffer, p + 4, len)), len];
+}
+async function instantiate() { X = (await WebAssembly.instantiate(BIN, {})).instance.exports; }
+function call(cmd) {
+  try { return callOnce(cmd); }
+  catch (e) {
+    if (!(e instanceof WebAssembly.RuntimeError)) throw e;
+    // The engine trapped (a Rust panic). Restart it synchronously and replay the last good log.
+    X = new WebAssembly.Instance(new WebAssembly.Module(BIN), {}).exports;
+    callOnce({ op: "load", events: lastGoodLog() });
+    throw new Error("The engine hit an internal error and restarted from your saved log.");
+  }
+}
+function lastGoodLog() { try { const s = localStorage.getItem("fondue.log.v2"); if (s) return JSON.parse(s); } catch (e) {} return JSON.parse(seedJson); }
+function callOnce(cmd) {
+  const b = enc.encode(JSON.stringify(cmd));
+  const p = X.fd_alloc(b.length);
+  new Uint8Array(X.memory.buffer, p, b.length).set(b);
+  const out = X.fd_call(p, b.length);
+  X.fd_free(p, b.length);
+  const [s, len] = readOut(out);
+  X.fd_free(out, len + 4);
+  const r = JSON.parse(s);
+  if (!r.ok) throw new Error(r.error);
+  return r.data;
+}
+function toast(msg, err) { const t = $("toast"); t.textContent = msg; t.className = "toast" + (err ? " err" : ""); }
+function save() { try { localStorage.setItem("fondue.log.v2", JSON.stringify(call({ op: "events" }))); } catch (e) {} }
+function append(event) {
+  try { const r = call({ op: "append", event }); save(); return r; }
+  catch (e) { toast(e.message, true); return null; }
+}
+
+function profile() { return call({ op: "profile", cook: COOK }); }
+function pref(set) { append({ type: "pref", cook: COOK, set }); render(); }
+
+function segmented(el, items, current, onPick) {
+  el.innerHTML = items.map(([v, l]) => `<button type="button" data-v="${esc(v)}" aria-pressed="${v === current}">${esc(l)}</button>`).join("");
+  el.querySelectorAll("button").forEach((b) => b.onclick = () => onPick(b.dataset.v));
+}
+
+const short = (r) => r.slice(0, 7);
+const mins = (m) => (Math.round(m * 10) / 10) + " min";
+function checkBadge(c) {
+  if (!c || c.status === "unchecked") return `<span class="badge st-unchecked">unchecked</span>`;
+  const why = [...c.must_fail, ...c.should_fail].join(", ");
+  const label = { ok: "✓ " + c.canon, deviates: "⇄ deviates", violates: "✕ violates", blocked: "✕ blocked" }[c.status];
+  return `<span class="badge st-${c.status}" title="${esc(why)}">${esc(label)}</span>${why ? ` <span class="note">${esc(why)}</span>` : ""}`;
+}
+
+function renderNode(n, ctx) {
+  const isPrep = n.kind === "preparation" || n.kind === "gathering";
+  const attend = n.attend.length ? `<span class="attend">▲ ${n.attend.length}</span>` : "";
+  if (n.folded && !unfolded.has(ctx)) {
+    return `<button type="button" class="fold" data-unfold="${esc(ctx)}" aria-expanded="false"><b>▸ ${esc(n.name)}</b>
+      <span class="mono">${esc(n.yields)} · ${mins(n.total_mins)}</span>
+      ${n.attend.map((a) => `<span class="attend">▲ ${esc(a.verb)}</span>`).join(" ")}
+      <span class="via">${esc(n.node)}@${short(n.rev)} · known ✓</span></button>`;
+  }
+  let h = `<div class="node"><div class="nhead"><span class="nname">${esc(n.name)}</span>
+    <span class="badge lvl">${esc(n.level)}</span>
+    <span class="via">${esc(n.node)}@${short(n.rev)} · by ${esc(n.author)}</span>
+    ${n.brand ? `<span class="badge">${esc(n.brand)}</span>` : ""}
+    ${isPrep ? `<span class="mono">${esc(n.yields)}${n.yields ? " · " : ""}${mins(n.total_mins)}</span>` : ""} ${attend}
+    ${n.folded ? `<button type="button" class="act" data-refold="${esc(ctx)}">Fold</button>` : ""}</div>`;
+  if (n.kind === "item") {
+    const f = Object.entries(n.facts).map(([k, v]) => `${k}: ${v}`).join(" · ");
+    h += `<div class="note mono">${esc(f || "no facts")}</div>`;
+  }
+  if (n.deltas.length) h += `<div class="deltas">${n.deltas.map((d) => `<div class="delta">Δ ${esc(d)}</div>`).join("")}</div>`;
+  if (n.slots.length) {
+    h += `<div class="slots">`;
+    for (const s of n.slots) {
+      const key = `${n.node}/${s.id}`;
+      const c = s.child;
+      h += `<div class="slot${s.dropped ? " dropped" : ""}"><span class="qty">${esc(s.qty)}</span><div class="what">
+        <span>${c ? `<b>${esc(c.name)}</b>` : `<i>unbound</i>`}</span>
+        <span class="via">${esc(s.role)} · via ${esc(s.via)}</span>
+        ${s.substituted ? `<span class="sub">⇄ swapped</span>` : ""}
+        ${s.dropped ? `<span class="badge">dropped by delta</span>` : (c ? checkBadge(s.check) : "")}
+        ${s.blocked.length ? `<span class="note st-blocked">refused: ${esc(s.blocked.join("; "))}</span>` : ""}</div>`;
+      if (s.needs_choice && !s.dropped) {
+        const opts = call({ op: "portal", concept: s.concept, cook: COOK });
+        h += `<div class="ask"><span>Ask once:</span>
+          <select data-choose="${esc(key)}" aria-label="Choose ${esc(s.role)}">
+          ${opts.map((o) => `<option value="${esc(o.node)}"${c && c.node === o.node ? " selected" : ""}>${esc(o.name)} · ★${o.outcome_avg.toFixed(1)}</option>`).join("")}</select>
+          <button type="button" class="act" data-keep="${esc(key)}">Use this</button></div>`;
+      }
+      h += `</div>`;
+      if (c && c.kind !== "item" && !s.dropped) h += renderNode(c, `${ctx}/${s.id}`);
+    }
+    h += `</div>`;
+  }
+  if (n.steps.length) {
+    h += `<div class="steps">` + n.steps.map((st) => `<div class="step"><span class="t">${st.mins} min</span>
+      <div><span class="v">${esc(st.verb)}</span> ${esc(st.text)} ${st.attend ? `<span class="attend">▲</span>` : ""}
+      ${st.cue ? `<span class="note">· done when ${esc(st.cue)}</span>` : ""}</div></div>`).join("") + `</div>`;
+  }
+  return h + `</div>`;
+}
+
+function usingBechamel() {
+  const mac = call({ op: "view", root: MAC, cook: COOK }).tree;
+  const s = mac.slots.find((x) => x.id === "sauce");
+  return s && !s.dropped && s.child ? s.child.node : null;
+}
+function render() {
+  const p = profile();
+  segmented($("zoom"), ZOOMS, root, (v) => { root = v; render(); });
+  segmented($("dial"), [["off", "Off"], ["advise", "Advise"], ["enforce", "Enforce"]], p.dial, (v) => pref({ op: "dial", dial: v }));
+  $("canon").value = p.canons.find((c) => c !== "public-standards") || "none";
+  $("std").checked = p.canons.includes("public-standards");
+  $("p-butter").value = p.pantry["c:butter"] || "";
+  const bech = usingBechamel();
+  $("p-milk").value = (bech && p.choices[bech + "/liquid"]) || "";
+  $("p-milk").disabled = !bech;
+  $("p-cheese").value = p.pantry["c:melting-cheese"] || "";
+  $("know").checked = p.known.includes("c:bechamel");
+
+  const t0 = performance.now();
+  const v = call({ op: "view", root, cook: COOK });
+  $("s-ms").textContent = (performance.now() - t0).toFixed(2) + " ms";
+  $("sheet").innerHTML = renderNode(v.tree, "root");
+
+  const prev = new Map(lastLock.map((l) => [l.path, l.node + "@" + l.rev + " " + l.via]));
+  $("lock").innerHTML = v.lock.map((l) => {
+    const line = `${l.path.padEnd(36)} ${l.node.padEnd(24)} ${short(l.rev)}  ${l.via}`;
+    const changed = lastLock.length && prev.get(l.path) !== l.node + "@" + l.rev + " " + l.via;
+    return `<span class="lockline${changed ? " changed" : ""}">${esc(line)}</span>`;
+  }).join("\n");
+  lastLock = v.lock;
+
+  // Portal, relative to whatever the mac and cheese currently uses for its sauce.
+  const mac = call({ op: "view", root: MAC, cook: COOK }).tree;
+  const sauceSlot = mac.slots.find((s) => s.id === "sauce");
+  const using = sauceSlot && !sauceSlot.dropped ? sauceSlot.child?.node : null;
+  const pt = call({ op: "portal", concept: "c:bechamel", cook: COOK });
+  $("portal").innerHTML = pt.map((e) => `<tr class="${e.node === using ? "chosen" : ""}">
+    <td><b>${esc(e.name)}</b><div class="via">${esc(e.author)}${e.forked_from ? ` · fork of ${esc(e.forked_from.node)}` : ""}${e.preferred_by.length ? ` · preferred by ${esc(e.preferred_by.join(", "))}` : ""}</div>
+      ${e.labels.length ? `<div class="note">${esc(e.labels.join(" · "))}</div>` : ""}</td>
+    <td>${checkBadge(e.check)}</td>
+    <td class="num">★ ${e.outcome_avg.toFixed(1)}<div class="via">${e.outcome_n} on this rev</div><div class="via">${e.node_outcome_n} all revs</div></td>
+    <td><div class="rate" role="group" aria-label="Rate ${esc(e.name)}">${[1,2,3,4,5].map((r) => `<button type="button" data-rate="${esc(e.node)}" data-rev="${esc(e.rev)}" data-r="${r}" aria-label="${r} stars">${r}</button>`).join("")}</div></td>
+    <td>${e.node === using ? `<span class="cap">in use</span>` : `<button type="button" class="act" data-use="${esc(e.node)}">Use</button>`}</td></tr>`).join("");
+
+  // Competing heads on the classic.
+  const cat = call({ op: "catalog" }).find((c) => c.node === "p:bechamel-classic");
+  if (cat && cat.tips.length >= 2) {
+    const d = call({ op: "diff", a: cat.tips[0], b: cat.tips[1] });
+    const who = (r) => call({ op: "get", rev: r }).author;
+    $("heads").innerHTML = `<div class="mono">${esc(who(cat.tips[0]))}@${short(cat.tips[0])} → ${esc(who(cat.tips[1]))}@${short(cat.tips[1])}</div>` +
+      d.map((l) => `<div>${esc(l)}</div>`).join("");
+  }
+
+  const log = call({ op: "events" });
+  $("s-events").textContent = log.length;
+  $("s-revs").textContent = call({ op: "catalog" }).reduce((a, c) => a + c.revs, 0);
+  $("log").textContent = log.slice(-14).reverse().map((e, i) => {
+    const n = log.length - 1 - i;
+    const what = e.type === "commit" ? `${e.node} by ${e.author}${e.msg ? " — " + e.msg : ""}`
+      : e.type === "profile" ? `${e.profile.cook}: canons [${e.profile.canons.join(", ")}], dial ${e.profile.dial}`
+      : e.type === "pref" ? `${e.cook}: ${e.set.op} ${JSON.stringify(Object.fromEntries(Object.entries(e.set).filter(([k]) => k !== "op")))}`
+      : e.type === "cook_log" ? `${e.cook} rated ${e.node}@${short(e.rev)} ${e.rating}`
+      : e.type === "head" ? `${e.scope} → ${e.node}@${short(e.rev)}` : e.type === "canon" ? e.canon.id
+      : `${e.node || ""} ${e.label || ""}`;
+    return `#${String(n).padStart(3, "0")}  ${e.type.padEnd(9)} ${what}`;
+  }).join("\n");
+}
+
+function wire() {
+  $("canon").onchange = () => pref({ op: "canons", canons: [$("canon").value, ...($("std").checked ? ["public-standards"] : [])] });
+  $("std").onchange = $("canon").onchange;
+  const pantry = (id, concept) => $(id).onchange = () => pref({ op: "pantry", concept, node: $(id).value || null });
+  pantry("p-butter", "c:butter"); pantry("p-cheese", "c:melting-cheese");
+  $("p-milk").onchange = () => { const bech = usingBechamel(); if (bech) pref({ op: "choose", key: bech + "/liquid", node: $("p-milk").value || null }); };
+  $("know").onchange = () => pref({ op: "know", concept: "c:bechamel", on: $("know").checked });
+  document.addEventListener("click", (ev) => {
+    const b = ev.target.closest("button"); if (!b) return;
+    if (b.dataset.unfold) { unfolded.add(b.dataset.unfold); render(); }
+    else if (b.dataset.refold) { unfolded.delete(b.dataset.refold); render(); }
+    else if (b.dataset.keep) { const sel = document.querySelector(`select[data-choose="${CSS.escape(b.dataset.keep)}"]`); pref({ op: "choose", key: b.dataset.keep, node: sel.value }); toast("Choice saved. Asked once."); }
+    else if (b.dataset.use) { pref({ op: "choose", key: MAC + "/sauce", node: b.dataset.use }); toast("Mac and cheese now uses " + b.dataset.use); }
+    else if (b.dataset.rate) { if (append({ type: "cook_log", cook: COOK, node: b.dataset.rate, rev: b.dataset.rev, rating: +b.dataset.r, note: "" })) { render(); toast(`Rated ${b.dataset.r}. Portal re-sorted.`); } }
+  });
+  $("fork").onsubmit = (ev) => {
+    ev.preventDefault();
+    const mac = call({ op: "view", root: MAC, cook: COOK }).tree;
+    const sauce = mac.slots.find((s) => s.id === "sauce");
+    if (sauce?.dropped) { toast("Your cheese choice removed the béchamel. Switch the cheese back to fork one.", true); return; }
+    const src = sauce?.child;
+    if (!src) { toast("Pick a béchamel for the mac and cheese first.", true); return; }
+    const rev = call({ op: "get", rev: src.rev });
+    const body = JSON.parse(JSON.stringify(rev.body));
+    const ratio = +$("f-ratio").value;
+    body.name = $("f-name").value.trim() || "My Béchamel";
+    body.facts.ratio_tbsp_per_cup = ratio;
+    const tbsp = (ratio * 2) + " Tbsp";
+    for (const s of body.slots) { if (s.id === "fat") { s.bind = { node: $("f-fat").value }; s.qty = tbsp; } if (s.id === "starch") s.qty = tbsp; }
+    const node = "p:bechamel-" + COOK;
+    const exists = call({ op: "catalog" }).some((c) => c.node === node);
+    const ok = append({ type: "commit", node, author: COOK, msg: `Fork of ${src.name}: ${ratio} Tbsp/cup`, body,
+      forked_from: { node: src.node, rev: src.rev }, ...(exists ? { parent: "^" } : {}) });
+    if (!ok) return;
+    append({ type: "publish", node, rev: "^", by: COOK });
+    pref({ op: "choose", key: MAC + "/sauce", node });
+    const d = call({ op: "diff", a: src.rev, b: call({ op: "catalog" }).find((c) => c.node === node).tips.slice(-1)[0] });
+    toast(`Published ${node}. Changes: ${d.join("; ")}`);
+  };
+  $("reset").onclick = () => { try { localStorage.removeItem("fondue.log.v2"); } catch (e) {} call({ op: "load", events: JSON.parse(seedJson) }); lastLock = []; unfolded.clear(); render(); toast("Reset to the seed log."); };
+}
+
+(async function boot() {
+  try {
+    BIN = Uint8Array.from(atob(WASM_B64), (c) => c.charCodeAt(0));
+    await instantiate();
+    $("s-wasm").textContent = Math.round(BIN.length / 1024) + " KB";
+    seedJson = readOut(X.fd_seed())[0];
+    let events = JSON.parse(seedJson);
+    try { const saved = localStorage.getItem("fondue.log.v2"); if (saved) events = JSON.parse(saved); } catch (e) {}
+    try { call({ op: "load", events }); } catch (e) { call({ op: "load", events: JSON.parse(seedJson) }); }
+    wire(); render();
+    $("boot").hidden = true; $("app").hidden = false; $("bottom").hidden = false;
+  } catch (e) {
+    $("boot").textContent = "The engine did not start: " + e.message;
+  }
+})();
+</script>
