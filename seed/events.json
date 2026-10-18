@@ -1,0 +1,1717 @@
+[
+ {
+  "type": "commit",
+  "node": "c:cooking-fat",
+  "author": "curated-core",
+  "msg": "",
+  "body": {
+   "kind": "concept",
+   "name": "Cooking fat",
+   "note": ""
+  }
+ },
+ {
+  "type": "commit",
+  "node": "c:butter",
+  "author": "curated-core",
+  "msg": "",
+  "body": {
+   "kind": "concept",
+   "name": "Butter",
+   "note": "",
+   "extends": "c:cooking-fat"
+  }
+ },
+ {
+  "type": "commit",
+  "node": "c:olive-oil",
+  "author": "curated-core",
+  "msg": "",
+  "body": {
+   "kind": "concept",
+   "name": "Olive oil",
+   "note": "",
+   "extends": "c:cooking-fat"
+  }
+ },
+ {
+  "type": "commit",
+  "node": "c:starch",
+  "author": "curated-core",
+  "msg": "",
+  "body": {
+   "kind": "concept",
+   "name": "Starch thickener",
+   "note": ""
+  }
+ },
+ {
+  "type": "commit",
+  "node": "c:flour",
+  "author": "curated-core",
+  "msg": "",
+  "body": {
+   "kind": "concept",
+   "name": "Flour",
+   "note": "",
+   "extends": "c:starch"
+  }
+ },
+ {
+  "type": "commit",
+  "node": "c:cooking-liquid",
+  "author": "curated-core",
+  "msg": "",
+  "body": {
+   "kind": "concept",
+   "name": "Cooking liquid",
+   "note": ""
+  }
+ },
+ {
+  "type": "commit",
+  "node": "c:milk",
+  "author": "curated-core",
+  "msg": "",
+  "body": {
+   "kind": "concept",
+   "name": "Milk",
+   "note": "",
+   "extends": "c:cooking-liquid"
+  }
+ },
+ {
+  "type": "commit",
+  "node": "c:plant-milk",
+  "author": "curated-core",
+  "msg": "",
+  "body": {
+   "kind": "concept",
+   "name": "Plant milk",
+   "note": "",
+   "extends": "c:cooking-liquid"
+  }
+ },
+ {
+  "type": "commit",
+  "node": "c:salt",
+  "author": "curated-core",
+  "msg": "",
+  "body": {
+   "kind": "concept",
+   "name": "Salt",
+   "note": ""
+  }
+ },
+ {
+  "type": "commit",
+  "node": "c:nutmeg",
+  "author": "curated-core",
+  "msg": "",
+  "body": {
+   "kind": "concept",
+   "name": "Nutmeg",
+   "note": ""
+  }
+ },
+ {
+  "type": "commit",
+  "node": "c:onion",
+  "author": "curated-core",
+  "msg": "",
+  "body": {
+   "kind": "concept",
+   "name": "Onion",
+   "note": ""
+  }
+ },
+ {
+  "type": "commit",
+  "node": "c:pasta",
+  "author": "curated-core",
+  "msg": "",
+  "body": {
+   "kind": "concept",
+   "name": "Pasta",
+   "note": ""
+  }
+ },
+ {
+  "type": "commit",
+  "node": "c:melting-cheese",
+  "author": "curated-core",
+  "msg": "",
+  "body": {
+   "kind": "concept",
+   "name": "Melting cheese",
+   "note": ""
+  }
+ },
+ {
+  "type": "commit",
+  "node": "c:greens",
+  "author": "curated-core",
+  "msg": "",
+  "body": {
+   "kind": "concept",
+   "name": "Salad greens",
+   "note": ""
+  }
+ },
+ {
+  "type": "commit",
+  "node": "c:vinegar",
+  "author": "curated-core",
+  "msg": "",
+  "body": {
+   "kind": "concept",
+   "name": "Vinegar",
+   "note": ""
+  }
+ },
+ {
+  "type": "commit",
+  "node": "c:bechamel",
+  "author": "curated-core",
+  "msg": "",
+  "body": {
+   "kind": "concept",
+   "name": "Béchamel",
+   "note": "Milk thickened by a roux, cooked to nappe."
+  }
+ },
+ {
+  "type": "commit",
+  "node": "c:mac-and-cheese",
+  "author": "curated-core",
+  "msg": "",
+  "body": {
+   "kind": "concept",
+   "name": "Mac and cheese",
+   "note": ""
+  }
+ },
+ {
+  "type": "commit",
+  "node": "c:salad",
+  "author": "curated-core",
+  "msg": "",
+  "body": {
+   "kind": "concept",
+   "name": "Green salad",
+   "note": ""
+  }
+ },
+ {
+  "type": "commit",
+  "node": "i:butter-unsalted",
+  "author": "curated-core",
+  "msg": "",
+  "body": {
+   "kind": "item",
+   "name": "Butter, unsalted",
+   "implements": [
+    "c:butter"
+   ],
+   "facts": {
+    "fat": "butter",
+    "salted": false,
+    "milkfat_pct": 80
+   },
+   "source": "Federal standard of identity: at least 80% milkfat"
+  }
+ },
+ {
+  "type": "commit",
+  "node": "i:butter-salted",
+  "author": "curated-core",
+  "msg": "",
+  "body": {
+   "kind": "item",
+   "name": "Butter, salted",
+   "implements": [
+    "c:butter"
+   ],
+   "facts": {
+    "fat": "butter",
+    "salted": true,
+    "milkfat_pct": 80
+   },
+   "source": "Federal standard of identity: at least 80% milkfat"
+  }
+ },
+ {
+  "type": "commit",
+  "node": "i:kerrygold-unsalted",
+  "author": "curated-core",
+  "msg": "",
+  "body": {
+   "kind": "item",
+   "name": "Kerrygold Unsalted Butter",
+   "implements": [
+    "c:butter"
+   ],
+   "facts": {
+    "fat": "butter",
+    "salted": false,
+    "milkfat_pct": 82
+   },
+   "brand": "Kerrygold"
+  }
+ },
+ {
+  "type": "commit",
+  "node": "i:olive-oil-ev",
+  "author": "curated-core",
+  "msg": "",
+  "body": {
+   "kind": "item",
+   "name": "Extra-virgin olive oil",
+   "implements": [
+    "c:olive-oil"
+   ],
+   "facts": {
+    "fat": "olive_oil"
+   }
+  }
+ },
+ {
+  "type": "commit",
+  "node": "i:flour-ap",
+  "author": "curated-core",
+  "msg": "",
+  "body": {
+   "kind": "item",
+   "name": "All-purpose flour",
+   "implements": [
+    "c:flour"
+   ],
+   "facts": {
+    "thickener": "starch",
+    "gluten": true
+   }
+  }
+ },
+ {
+  "type": "commit",
+  "node": "i:rice-flour",
+  "author": "curated-core",
+  "msg": "",
+  "body": {
+   "kind": "item",
+   "name": "Rice flour",
+   "implements": [
+    "c:flour"
+   ],
+   "facts": {
+    "thickener": "starch",
+    "gluten": false
+   }
+  }
+ },
+ {
+  "type": "commit",
+  "node": "i:milk-whole",
+  "author": "curated-core",
+  "msg": "",
+  "body": {
+   "kind": "item",
+   "name": "Whole milk",
+   "implements": [
+    "c:milk"
+   ],
+   "facts": {
+    "liquid": "dairy"
+   }
+  }
+ },
+ {
+  "type": "commit",
+  "node": "i:oat-milk",
+  "author": "curated-core",
+  "msg": "",
+  "body": {
+   "kind": "item",
+   "name": "Oat milk, unsweetened",
+   "implements": [
+    "c:plant-milk"
+   ],
+   "facts": {
+    "liquid": "plant"
+   }
+  }
+ },
+ {
+  "type": "commit",
+  "node": "i:salt-kosher",
+  "author": "curated-core",
+  "msg": "",
+  "body": {
+   "kind": "item",
+   "name": "Kosher salt",
+   "implements": [
+    "c:salt"
+   ],
+   "facts": {}
+  }
+ },
+ {
+  "type": "commit",
+  "node": "i:nutmeg",
+  "author": "curated-core",
+  "msg": "",
+  "body": {
+   "kind": "item",
+   "name": "Nutmeg, whole",
+   "implements": [
+    "c:nutmeg"
+   ],
+   "facts": {}
+  }
+ },
+ {
+  "type": "commit",
+  "node": "i:onion-yellow",
+  "author": "curated-core",
+  "msg": "",
+  "body": {
+   "kind": "item",
+   "name": "Yellow onion",
+   "implements": [
+    "c:onion"
+   ],
+   "facts": {}
+  }
+ },
+ {
+  "type": "commit",
+  "node": "i:elbows",
+  "author": "curated-core",
+  "msg": "",
+  "body": {
+   "kind": "item",
+   "name": "Elbow macaroni",
+   "implements": [
+    "c:pasta"
+   ],
+   "facts": {}
+  }
+ },
+ {
+  "type": "commit",
+  "node": "i:cheddar-block",
+  "author": "curated-core",
+  "msg": "",
+  "body": {
+   "kind": "item",
+   "name": "Sharp cheddar, block",
+   "implements": [
+    "c:melting-cheese"
+   ],
+   "facts": {
+    "anti_caking": false,
+    "self_emulsifying": false
+   }
+  }
+ },
+ {
+  "type": "commit",
+  "node": "i:cheddar-shredded",
+  "author": "curated-core",
+  "msg": "",
+  "body": {
+   "kind": "item",
+   "name": "Cheddar, pre-shredded bag",
+   "implements": [
+    "c:melting-cheese"
+   ],
+   "facts": {
+    "anti_caking": true,
+    "self_emulsifying": false
+   }
+  }
+ },
+ {
+  "type": "commit",
+  "node": "i:velveeta",
+  "author": "curated-core",
+  "msg": "",
+  "body": {
+   "kind": "item",
+   "name": "Velveeta, 8 oz block",
+   "implements": [
+    "c:melting-cheese"
+   ],
+   "facts": {
+    "anti_caking": false,
+    "self_emulsifying": true
+   },
+   "brand": "Velveeta"
+  }
+ },
+ {
+  "type": "commit",
+  "node": "i:mixed-greens",
+  "author": "curated-core",
+  "msg": "",
+  "body": {
+   "kind": "item",
+   "name": "Mixed greens",
+   "implements": [
+    "c:greens"
+   ],
+   "facts": {}
+  }
+ },
+ {
+  "type": "commit",
+  "node": "i:red-wine-vinegar",
+  "author": "curated-core",
+  "msg": "",
+  "body": {
+   "kind": "item",
+   "name": "Red wine vinegar",
+   "implements": [
+    "c:vinegar"
+   ],
+   "facts": {}
+  }
+ },
+ {
+  "type": "commit",
+  "node": "p:bechamel-classic",
+  "author": "curated-core",
+  "msg": "Classic béchamel, medium",
+  "body": {
+   "kind": "preparation",
+   "name": "Classic Béchamel",
+   "implements": [
+    "c:bechamel"
+   ],
+   "yields": "2 cups",
+   "facts": {
+    "liquid": "@slot:liquid.liquid",
+    "thickener": "@slot:starch.thickener",
+    "fat": "@slot:fat.fat",
+    "ratio_tbsp_per_cup": 2
+   },
+   "slots": [
+    {
+     "id": "fat",
+     "role": "fat for roux",
+     "concept": "c:cooking-fat",
+     "qty": "4 Tbsp",
+     "bind": {
+      "node": "i:butter-unsalted"
+     }
+    },
+    {
+     "id": "starch",
+     "role": "starch",
+     "concept": "c:flour",
+     "qty": "4 Tbsp",
+     "bind": {
+      "node": "i:flour-ap"
+     }
+    },
+    {
+     "id": "liquid",
+     "role": "liquid",
+     "concept": "c:cooking-liquid",
+     "qty": "2 cups",
+     "bind": {
+      "node": "i:milk-whole"
+     }
+    },
+    {
+     "id": "salt",
+     "role": "salt",
+     "concept": "c:salt",
+     "qty": "½ tsp",
+     "bind": {
+      "node": "i:salt-kosher"
+     }
+    },
+    {
+     "id": "nutmeg",
+     "role": "nutmeg",
+     "concept": "c:nutmeg",
+     "qty": "pinch",
+     "bind": {
+      "node": "i:nutmeg"
+     }
+    }
+   ],
+   "steps": [
+    {
+     "verb": "WARM",
+     "text": "Milk to steaming.",
+     "mins": 3,
+     "uses": [
+      "liquid"
+     ],
+     "attend": false,
+     "cue": "wisps of steam, no bubbles"
+    },
+    {
+     "verb": "MELT",
+     "text": "Fat into the saucepan, medium-low.",
+     "mins": 1,
+     "uses": [
+      "fat"
+     ],
+     "attend": false,
+     "cue": ""
+    },
+    {
+     "verb": "WHISK",
+     "text": "Flour in all at once. Stir constantly.",
+     "mins": 2,
+     "uses": [
+      "starch"
+     ],
+     "attend": true,
+     "cue": "toasty, still pale"
+    },
+    {
+     "verb": "WHISK",
+     "text": "Milk in three pours, smooth each time.",
+     "mins": 2,
+     "uses": [
+      "liquid"
+     ],
+     "attend": true,
+     "cue": "no lumps"
+    },
+    {
+     "verb": "SIMMER",
+     "text": "Lazy bubbles. Stir the corners.",
+     "mins": 6,
+     "uses": [],
+     "attend": false,
+     "cue": "nappe: a finger line on the spoon holds"
+    },
+    {
+     "verb": "SALT",
+     "text": "Salt, then taste.",
+     "mins": 0.5,
+     "uses": [
+      "salt"
+     ],
+     "attend": false,
+     "cue": ""
+    },
+    {
+     "verb": "SEASON",
+     "text": "Grate in nutmeg.",
+     "mins": 0.5,
+     "uses": [
+      "nutmeg"
+     ],
+     "attend": false,
+     "cue": ""
+    }
+   ],
+   "variants": [
+    {
+     "when": {
+      "slot": "fat",
+      "fact": "salted",
+      "eq": true
+     },
+     "delta": {
+      "drop_slots": [
+       "salt"
+      ],
+      "note": "Salted butter bound: skip the added salt and taste first."
+     }
+    }
+   ]
+  }
+ },
+ {
+  "type": "commit",
+  "node": "p:bechamel-classic",
+  "author": "chef-luc",
+  "msg": "More salt, longer simmer",
+  "body": {
+   "kind": "preparation",
+   "name": "Classic Béchamel",
+   "implements": [
+    "c:bechamel"
+   ],
+   "yields": "2 cups",
+   "facts": {
+    "liquid": "@slot:liquid.liquid",
+    "thickener": "@slot:starch.thickener",
+    "fat": "@slot:fat.fat",
+    "ratio_tbsp_per_cup": 2
+   },
+   "slots": [
+    {
+     "id": "fat",
+     "role": "fat for roux",
+     "concept": "c:cooking-fat",
+     "qty": "4 Tbsp",
+     "bind": {
+      "node": "i:butter-unsalted"
+     }
+    },
+    {
+     "id": "starch",
+     "role": "starch",
+     "concept": "c:flour",
+     "qty": "4 Tbsp",
+     "bind": {
+      "node": "i:flour-ap"
+     }
+    },
+    {
+     "id": "liquid",
+     "role": "liquid",
+     "concept": "c:cooking-liquid",
+     "qty": "2 cups",
+     "bind": {
+      "node": "i:milk-whole"
+     }
+    },
+    {
+     "id": "salt",
+     "role": "salt",
+     "concept": "c:salt",
+     "qty": "¾ tsp",
+     "bind": {
+      "node": "i:salt-kosher"
+     }
+    },
+    {
+     "id": "nutmeg",
+     "role": "nutmeg",
+     "concept": "c:nutmeg",
+     "qty": "pinch",
+     "bind": {
+      "node": "i:nutmeg"
+     }
+    }
+   ],
+   "steps": [
+    {
+     "verb": "WARM",
+     "text": "Milk to steaming.",
+     "mins": 3,
+     "uses": [
+      "liquid"
+     ],
+     "attend": false,
+     "cue": "wisps of steam, no bubbles"
+    },
+    {
+     "verb": "MELT",
+     "text": "Fat into the saucepan, medium-low.",
+     "mins": 1,
+     "uses": [
+      "fat"
+     ],
+     "attend": false,
+     "cue": ""
+    },
+    {
+     "verb": "WHISK",
+     "text": "Flour in all at once. Stir constantly.",
+     "mins": 2,
+     "uses": [
+      "starch"
+     ],
+     "attend": true,
+     "cue": "toasty, still pale"
+    },
+    {
+     "verb": "WHISK",
+     "text": "Milk in three pours, smooth each time.",
+     "mins": 2,
+     "uses": [
+      "liquid"
+     ],
+     "attend": true,
+     "cue": "no lumps"
+    },
+    {
+     "verb": "SIMMER",
+     "text": "Lazy bubbles. Stir the corners.",
+     "mins": 8,
+     "uses": [],
+     "attend": false,
+     "cue": "nappe: a finger line on the spoon holds"
+    },
+    {
+     "verb": "SALT",
+     "text": "Salt, then taste.",
+     "mins": 0.5,
+     "uses": [
+      "salt"
+     ],
+     "attend": false,
+     "cue": ""
+    },
+    {
+     "verb": "SEASON",
+     "text": "Grate in nutmeg.",
+     "mins": 0.5,
+     "uses": [
+      "nutmeg"
+     ],
+     "attend": false,
+     "cue": ""
+    }
+   ],
+   "variants": [
+    {
+     "when": {
+      "slot": "fat",
+      "fact": "salted",
+      "eq": true
+     },
+     "delta": {
+      "drop_slots": [
+       "salt"
+      ],
+      "note": "Salted butter bound: skip the added salt and taste first."
+     }
+    }
+   ]
+  },
+  "parent": "^"
+ },
+ {
+  "type": "commit",
+  "node": "p:bechamel-classic",
+  "author": "chef-marie",
+  "msg": "Long simmer and strain",
+  "body": {
+   "kind": "preparation",
+   "name": "Classic Béchamel",
+   "implements": [
+    "c:bechamel"
+   ],
+   "yields": "2 cups",
+   "facts": {
+    "liquid": "@slot:liquid.liquid",
+    "thickener": "@slot:starch.thickener",
+    "fat": "@slot:fat.fat",
+    "ratio_tbsp_per_cup": 2
+   },
+   "slots": [
+    {
+     "id": "fat",
+     "role": "fat for roux",
+     "concept": "c:cooking-fat",
+     "qty": "4 Tbsp",
+     "bind": {
+      "node": "i:butter-unsalted"
+     }
+    },
+    {
+     "id": "starch",
+     "role": "starch",
+     "concept": "c:flour",
+     "qty": "4 Tbsp",
+     "bind": {
+      "node": "i:flour-ap"
+     }
+    },
+    {
+     "id": "liquid",
+     "role": "liquid",
+     "concept": "c:cooking-liquid",
+     "qty": "2 cups",
+     "bind": {
+      "node": "i:milk-whole"
+     }
+    },
+    {
+     "id": "salt",
+     "role": "salt",
+     "concept": "c:salt",
+     "qty": "½ tsp",
+     "bind": {
+      "node": "i:salt-kosher"
+     }
+    },
+    {
+     "id": "nutmeg",
+     "role": "nutmeg",
+     "concept": "c:nutmeg",
+     "qty": "pinch",
+     "bind": {
+      "node": "i:nutmeg"
+     }
+    }
+   ],
+   "steps": [
+    {
+     "verb": "WARM",
+     "text": "Milk to steaming.",
+     "mins": 3,
+     "uses": [
+      "liquid"
+     ],
+     "attend": false,
+     "cue": "wisps of steam, no bubbles"
+    },
+    {
+     "verb": "MELT",
+     "text": "Fat into the saucepan, medium-low.",
+     "mins": 1,
+     "uses": [
+      "fat"
+     ],
+     "attend": false,
+     "cue": ""
+    },
+    {
+     "verb": "WHISK",
+     "text": "Flour in all at once. Stir constantly.",
+     "mins": 2,
+     "uses": [
+      "starch"
+     ],
+     "attend": true,
+     "cue": "toasty, still pale"
+    },
+    {
+     "verb": "WHISK",
+     "text": "Milk in three pours, smooth each time.",
+     "mins": 2,
+     "uses": [
+      "liquid"
+     ],
+     "attend": true,
+     "cue": "no lumps"
+    },
+    {
+     "verb": "SIMMER",
+     "text": "Simmer, stirring, then strain.",
+     "mins": 12,
+     "uses": [],
+     "attend": false,
+     "cue": "nappe: a finger line on the spoon holds"
+    },
+    {
+     "verb": "SALT",
+     "text": "Salt, then taste.",
+     "mins": 0.5,
+     "uses": [
+      "salt"
+     ],
+     "attend": false,
+     "cue": ""
+    },
+    {
+     "verb": "SEASON",
+     "text": "Grate in nutmeg.",
+     "mins": 0.5,
+     "uses": [
+      "nutmeg"
+     ],
+     "attend": false,
+     "cue": ""
+    }
+   ],
+   "variants": [
+    {
+     "when": {
+      "slot": "fat",
+      "fact": "salted",
+      "eq": true
+     },
+     "delta": {
+      "drop_slots": [
+       "salt"
+      ],
+      "note": "Salted butter bound: skip the added salt and taste first."
+     }
+    }
+   ]
+  },
+  "parent": "@first"
+ },
+ {
+  "type": "commit",
+  "node": "p:bechamel-nana",
+  "author": "nana",
+  "msg": "Lighter, onion-infused",
+  "body": {
+   "kind": "preparation",
+   "name": "Nana's Béchamel",
+   "implements": [
+    "c:bechamel"
+   ],
+   "yields": "2 cups",
+   "facts": {
+    "liquid": "@slot:liquid.liquid",
+    "thickener": "@slot:starch.thickener",
+    "fat": "@slot:fat.fat",
+    "ratio_tbsp_per_cup": 1.5
+   },
+   "slots": [
+    {
+     "id": "fat",
+     "role": "fat for roux",
+     "concept": "c:cooking-fat",
+     "qty": "3 Tbsp",
+     "bind": {
+      "node": "i:butter-unsalted"
+     }
+    },
+    {
+     "id": "starch",
+     "role": "starch",
+     "concept": "c:flour",
+     "qty": "3 Tbsp",
+     "bind": {
+      "node": "i:flour-ap"
+     }
+    },
+    {
+     "id": "liquid",
+     "role": "liquid",
+     "concept": "c:cooking-liquid",
+     "qty": "2 cups",
+     "bind": {
+      "node": "i:milk-whole"
+     }
+    },
+    {
+     "id": "salt",
+     "role": "salt",
+     "concept": "c:salt",
+     "qty": "½ tsp",
+     "bind": {
+      "node": "i:salt-kosher"
+     }
+    },
+    {
+     "id": "nutmeg",
+     "role": "nutmeg",
+     "concept": "c:nutmeg",
+     "qty": "pinch",
+     "bind": {
+      "node": "i:nutmeg"
+     }
+    },
+    {
+     "id": "onion",
+     "role": "onion, studded",
+     "concept": "c:onion",
+     "qty": "¼",
+     "bind": {
+      "node": "i:onion-yellow"
+     }
+    }
+   ],
+   "steps": [
+    {
+     "verb": "INFUSE",
+     "text": "Milk with the studded onion, off heat.",
+     "mins": 10,
+     "uses": [
+      "liquid",
+      "onion"
+     ],
+     "attend": false,
+     "cue": ""
+    },
+    {
+     "verb": "WARM",
+     "text": "Milk to steaming.",
+     "mins": 3,
+     "uses": [
+      "liquid"
+     ],
+     "attend": false,
+     "cue": "wisps of steam, no bubbles"
+    },
+    {
+     "verb": "MELT",
+     "text": "Fat into the saucepan, medium-low.",
+     "mins": 1,
+     "uses": [
+      "fat"
+     ],
+     "attend": false,
+     "cue": ""
+    },
+    {
+     "verb": "WHISK",
+     "text": "Flour in all at once. Stir constantly.",
+     "mins": 2,
+     "uses": [
+      "starch"
+     ],
+     "attend": true,
+     "cue": "toasty, still pale"
+    },
+    {
+     "verb": "WHISK",
+     "text": "Milk in three pours, smooth each time.",
+     "mins": 2,
+     "uses": [
+      "liquid"
+     ],
+     "attend": true,
+     "cue": "no lumps"
+    },
+    {
+     "verb": "SIMMER",
+     "text": "Lazy bubbles. Stir the corners.",
+     "mins": 6,
+     "uses": [],
+     "attend": false,
+     "cue": "nappe: a finger line on the spoon holds"
+    },
+    {
+     "verb": "SALT",
+     "text": "Salt, then taste.",
+     "mins": 0.5,
+     "uses": [
+      "salt"
+     ],
+     "attend": false,
+     "cue": ""
+    },
+    {
+     "verb": "SEASON",
+     "text": "Grate in nutmeg.",
+     "mins": 0.5,
+     "uses": [
+      "nutmeg"
+     ],
+     "attend": false,
+     "cue": ""
+    }
+   ],
+   "variants": [
+    {
+     "when": {
+      "slot": "fat",
+      "fact": "salted",
+      "eq": true
+     },
+     "delta": {
+      "drop_slots": [
+       "salt"
+      ],
+      "note": "Salted butter bound: skip the added salt and taste first."
+     }
+    }
+   ]
+  },
+  "forked_from": {
+   "node": "p:bechamel-classic"
+  }
+ },
+ {
+  "type": "commit",
+  "node": "p:bechamel-olive-oil",
+  "author": "ana",
+  "msg": "Dairy-light roux",
+  "body": {
+   "kind": "preparation",
+   "name": "Olive-Oil Béchamel",
+   "implements": [
+    "c:bechamel"
+   ],
+   "yields": "2 cups",
+   "facts": {
+    "liquid": "@slot:liquid.liquid",
+    "thickener": "@slot:starch.thickener",
+    "fat": "@slot:fat.fat",
+    "ratio_tbsp_per_cup": 2
+   },
+   "slots": [
+    {
+     "id": "fat",
+     "role": "fat for roux",
+     "concept": "c:cooking-fat",
+     "qty": "4 Tbsp",
+     "bind": {
+      "node": "i:olive-oil-ev"
+     }
+    },
+    {
+     "id": "starch",
+     "role": "starch",
+     "concept": "c:flour",
+     "qty": "4 Tbsp",
+     "bind": {
+      "node": "i:flour-ap"
+     }
+    },
+    {
+     "id": "liquid",
+     "role": "liquid",
+     "concept": "c:cooking-liquid",
+     "qty": "2 cups",
+     "bind": {
+      "node": "i:milk-whole"
+     }
+    },
+    {
+     "id": "salt",
+     "role": "salt",
+     "concept": "c:salt",
+     "qty": "½ tsp",
+     "bind": {
+      "node": "i:salt-kosher"
+     }
+    },
+    {
+     "id": "nutmeg",
+     "role": "nutmeg",
+     "concept": "c:nutmeg",
+     "qty": "pinch",
+     "bind": {
+      "node": "i:nutmeg"
+     }
+    }
+   ],
+   "steps": [
+    {
+     "verb": "WARM",
+     "text": "Milk to steaming.",
+     "mins": 3,
+     "uses": [
+      "liquid"
+     ],
+     "attend": false,
+     "cue": "wisps of steam, no bubbles"
+    },
+    {
+     "verb": "MELT",
+     "text": "Fat into the saucepan, medium-low.",
+     "mins": 1,
+     "uses": [
+      "fat"
+     ],
+     "attend": false,
+     "cue": ""
+    },
+    {
+     "verb": "WHISK",
+     "text": "Flour in all at once. Stir constantly.",
+     "mins": 2,
+     "uses": [
+      "starch"
+     ],
+     "attend": true,
+     "cue": "toasty, still pale"
+    },
+    {
+     "verb": "WHISK",
+     "text": "Milk in three pours, smooth each time.",
+     "mins": 2,
+     "uses": [
+      "liquid"
+     ],
+     "attend": true,
+     "cue": "no lumps"
+    },
+    {
+     "verb": "SIMMER",
+     "text": "Lazy bubbles. Stir the corners.",
+     "mins": 6,
+     "uses": [],
+     "attend": false,
+     "cue": "nappe: a finger line on the spoon holds"
+    },
+    {
+     "verb": "SALT",
+     "text": "Salt, then taste.",
+     "mins": 0.5,
+     "uses": [
+      "salt"
+     ],
+     "attend": false,
+     "cue": ""
+    },
+    {
+     "verb": "SEASON",
+     "text": "Grate in nutmeg.",
+     "mins": 0.5,
+     "uses": [
+      "nutmeg"
+     ],
+     "attend": false,
+     "cue": ""
+    }
+   ],
+   "variants": [
+    {
+     "when": {
+      "slot": "fat",
+      "fact": "salted",
+      "eq": true
+     },
+     "delta": {
+      "drop_slots": [
+       "salt"
+      ],
+      "note": "Salted butter bound: skip the added salt and taste first."
+     }
+    }
+   ]
+  }
+ },
+ {
+  "type": "commit",
+  "node": "p:mac-and-cheese-nana",
+  "author": "nana",
+  "msg": "",
+  "body": {
+   "kind": "preparation",
+   "name": "Nana's Mac & Cheese",
+   "implements": [
+    "c:mac-and-cheese"
+   ],
+   "yields": "4–6",
+   "facts": {},
+   "slots": [
+    {
+     "id": "sauce",
+     "role": "cheese sauce base",
+     "concept": "c:bechamel",
+     "qty": "2 cups"
+    },
+    {
+     "id": "pasta",
+     "role": "pasta",
+     "concept": "c:pasta",
+     "qty": "8 oz",
+     "bind": {
+      "node": "i:elbows"
+     }
+    },
+    {
+     "id": "cheese",
+     "role": "melting cheese",
+     "concept": "c:melting-cheese",
+     "qty": "8 oz",
+     "bind": {
+      "node": "i:cheddar-block"
+     }
+    }
+   ],
+   "steps": [
+    {
+     "verb": "BOIL",
+     "text": "Elbows into salted water.",
+     "mins": 9,
+     "uses": [
+      "pasta"
+     ],
+     "attend": false,
+     "cue": "box time − 2"
+    },
+    {
+     "verb": "MELT",
+     "text": "Off heat: cheese into the sauce by handfuls.",
+     "mins": 2,
+     "uses": [
+      "sauce",
+      "cheese"
+     ],
+     "attend": false,
+     "cue": "smooth, no oil slick"
+    },
+    {
+     "verb": "FOLD",
+     "text": "Drained pasta into the sauce. Salt to taste.",
+     "mins": 1,
+     "uses": [
+      "pasta"
+     ],
+     "attend": false,
+     "cue": ""
+    }
+   ],
+   "variants": [
+    {
+     "when": {
+      "slot": "cheese",
+      "fact": "self_emulsifying",
+      "eq": true
+     },
+     "delta": {
+      "drop_slots": [
+       "sauce"
+      ],
+      "at": 1,
+      "add_steps": [
+       {
+        "verb": "MELT",
+        "text": "Cubes into 1 cup milk, low heat, stirring.",
+        "mins": 6,
+        "uses": [
+         "cheese"
+        ],
+        "attend": true,
+        "cue": "smooth"
+       }
+      ],
+      "note": "Processed cheese melts smooth on its own: the béchamel drops out. Omit salt."
+     }
+    },
+    {
+     "when": {
+      "slot": "cheese",
+      "fact": "anti_caking",
+      "eq": true
+     },
+     "delta": {
+      "note": "Pre-shredded: anti-caking starch can turn the sauce grainy. Lowest heat, small handfuls."
+     }
+    }
+   ]
+  }
+ },
+ {
+  "type": "commit",
+  "node": "p:green-salad",
+  "author": "curated-core",
+  "msg": "",
+  "body": {
+   "kind": "preparation",
+   "name": "Green Salad",
+   "implements": [
+    "c:salad"
+   ],
+   "yields": "4",
+   "slots": [
+    {
+     "id": "greens",
+     "role": "greens",
+     "concept": "c:greens",
+     "qty": "5 oz",
+     "bind": {
+      "node": "i:mixed-greens"
+     }
+    },
+    {
+     "id": "oil",
+     "role": "oil",
+     "concept": "c:olive-oil",
+     "qty": "3 Tbsp",
+     "bind": {
+      "node": "i:olive-oil-ev"
+     }
+    },
+    {
+     "id": "vinegar",
+     "role": "vinegar",
+     "concept": "c:vinegar",
+     "qty": "1 Tbsp",
+     "bind": {
+      "node": "i:red-wine-vinegar"
+     }
+    }
+   ],
+   "steps": [
+    {
+     "verb": "WHISK",
+     "text": "Vinegar, salt, then oil in a stream.",
+     "mins": 3,
+     "uses": [
+      "oil",
+      "vinegar"
+     ],
+     "attend": false,
+     "cue": ""
+    },
+    {
+     "verb": "TOSS",
+     "text": "Dress the greens just before serving.",
+     "mins": 1,
+     "uses": [
+      "greens"
+     ],
+     "attend": false,
+     "cue": ""
+    }
+   ]
+  }
+ },
+ {
+  "type": "commit",
+  "node": "g:sunday-dinner",
+  "author": "patrick",
+  "msg": "",
+  "body": {
+   "kind": "gathering",
+   "name": "Sunday Dinner",
+   "serve": "6:30 PM",
+   "slots": [
+    {
+     "id": "main",
+     "role": "main",
+     "concept": "c:mac-and-cheese",
+     "qty": "1 pan",
+     "bind": {
+      "node": "p:mac-and-cheese-nana"
+     }
+    },
+    {
+     "id": "side",
+     "role": "side",
+     "concept": "c:salad",
+     "qty": "1 bowl",
+     "bind": {
+      "node": "p:green-salad"
+     }
+    }
+   ]
+  }
+ },
+ {
+  "type": "canon",
+  "author": "curated-core",
+  "canon": {
+   "id": "public-standards",
+   "name": "Public standards",
+   "basis": "Federal standards of identity, paraphrased",
+   "contracts": {
+    "c:butter": {
+     "must": [
+      {
+       "fact": "milkfat_pct",
+       "op": "gte",
+       "value": 80,
+       "label": "at least 80% milkfat"
+      }
+     ]
+    }
+   }
+  }
+ },
+ {
+  "type": "canon",
+  "author": "curated-core",
+  "canon": {
+   "id": "classical",
+   "name": "Classical French",
+   "basis": "After classical French technique; contracts in our own words",
+   "contracts": {
+    "c:bechamel": {
+     "must": [
+      {
+       "fact": "liquid",
+       "op": "eq",
+       "value": "dairy",
+       "label": "dairy liquid"
+      },
+      {
+       "fact": "thickener",
+       "op": "eq",
+       "value": "starch",
+       "label": "starch-thickened"
+      }
+     ],
+     "should": [
+      {
+       "fact": "fat",
+       "op": "eq",
+       "value": "butter",
+       "label": "butter roux"
+      },
+      {
+       "fact": "ratio_tbsp_per_cup",
+       "op": "between",
+       "value": [
+        1.5,
+        3
+       ],
+       "label": "1½–3 Tbsp roux per cup"
+      }
+     ]
+    }
+   },
+   "prefer": {
+    "c:bechamel": {
+     "node": "p:bechamel-classic"
+    }
+   }
+  }
+ },
+ {
+  "type": "canon",
+  "author": "curated-core",
+  "canon": {
+   "id": "home",
+   "name": "Home cooking",
+   "basis": "Whatever works at home",
+   "contracts": {
+    "c:bechamel": {
+     "must": [
+      {
+       "fact": "thickener",
+       "op": "eq",
+       "value": "starch",
+       "label": "starch-thickened"
+      }
+     ]
+    }
+   },
+   "prefer": {
+    "c:bechamel": {
+     "node": "p:bechamel-nana"
+    }
+   }
+  }
+ },
+ {
+  "type": "canon",
+  "author": "curated-core",
+  "canon": {
+   "id": "none",
+   "name": "None / homemade",
+   "basis": "No contracts"
+  }
+ },
+ {
+  "type": "head",
+  "scope": "canon:classical",
+  "node": "p:bechamel-classic",
+  "rev": "@tip",
+  "by": "canon:classical"
+ },
+ {
+  "type": "publish",
+  "node": "p:bechamel-classic",
+  "rev": "^",
+  "by": "seed"
+ },
+ {
+  "type": "publish",
+  "node": "p:bechamel-nana",
+  "rev": "^",
+  "by": "seed"
+ },
+ {
+  "type": "publish",
+  "node": "p:bechamel-olive-oil",
+  "rev": "^",
+  "by": "seed"
+ },
+ {
+  "type": "publish",
+  "node": "p:mac-and-cheese-nana",
+  "rev": "^",
+  "by": "seed"
+ },
+ {
+  "type": "publish",
+  "node": "p:bechamel-classic",
+  "rev": "@tip",
+  "by": "seed"
+ },
+ {
+  "type": "label",
+  "node": "p:bechamel-nana",
+  "rev": "^",
+  "label": "family recipe",
+  "by": "nana"
+ },
+ {
+  "type": "label",
+  "node": "p:bechamel-classic",
+  "rev": "^",
+  "label": "endorsed",
+  "by": "canon:classical"
+ },
+ {
+  "type": "cook_log",
+  "cook": "sam",
+  "node": "p:bechamel-classic",
+  "rev": "^",
+  "rating": 4,
+  "note": "Reliable."
+ },
+ {
+  "type": "cook_log",
+  "cook": "lee",
+  "node": "p:bechamel-classic",
+  "rev": "^",
+  "rating": 4,
+  "note": ""
+ },
+ {
+  "type": "cook_log",
+  "cook": "kai",
+  "node": "p:bechamel-classic",
+  "rev": "^",
+  "rating": 3,
+  "note": "A bit floury."
+ },
+ {
+  "type": "cook_log",
+  "cook": "sam",
+  "node": "p:bechamel-nana",
+  "rev": "^",
+  "rating": 5,
+  "note": "The onion makes it."
+ },
+ {
+  "type": "cook_log",
+  "cook": "lee",
+  "node": "p:bechamel-nana",
+  "rev": "^",
+  "rating": 5,
+  "note": ""
+ },
+ {
+  "type": "cook_log",
+  "cook": "rio",
+  "node": "p:bechamel-nana",
+  "rev": "^",
+  "rating": 4,
+  "note": ""
+ },
+ {
+  "type": "cook_log",
+  "cook": "kai",
+  "node": "p:bechamel-olive-oil",
+  "rev": "^",
+  "rating": 3,
+  "note": "Fine for dairy-light."
+ },
+ {
+  "type": "cook_log",
+  "cook": "rio",
+  "node": "p:bechamel-olive-oil",
+  "rev": "^",
+  "rating": 2,
+  "note": "Bitter edge."
+ },
+ {
+  "type": "cook_log",
+  "cook": "sam",
+  "node": "p:mac-and-cheese-nana",
+  "rev": "^",
+  "rating": 5,
+  "note": ""
+ },
+ {
+  "type": "profile",
+  "by": "patrick",
+  "profile": {
+   "cook": "patrick",
+   "canons": [
+    "home",
+    "public-standards"
+   ],
+   "dial": "advise",
+   "pantry": {},
+   "known": [],
+   "choices": {}
+  }
+ }
+]

@@ -1,0 +1,12 @@
+[package]
+name = "fondue-wasm"
+edition.workspace = true
+version.workspace = true
+license.workspace = true
+description = "Fondue core exposed to the browser through a JSON-in, JSON-out C ABI"
+
+[lib]
+crate-type = ["cdylib"]
+
+[dependencies]
+fondue-core = { path = "../fondue-core" }

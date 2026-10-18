@@ -1,0 +1,95 @@
+# Public repo: Cloudflare Workers static assets.
+#   PR from a branch in THIS repo  -> Worker Preview (URL commented on the PR)
+#   push to main (= Patrick merged)-> production deploy to https://fondue.specdlc.com
+#   PR closed                      -> preview deleted
+#   manual run on main             -> production deploy (use once after enabling deploys)
+# Fork PRs never get secrets (pull_request, not pull_request_target).
+# Off until the repo variable CLOUDFLARE_DEPLOY_ENABLED is "true" (Patrick flips it).
+name: Deploy
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened, closed]
+  push:
+    branches: [main]
+  workflow_dispatch:          # manual production deploy of main (e.g. right after enabling deploys)
+
+permissions:
+  contents: read
+  pull-requests: write
+
+concurrency:
+  group: deploy-${{ github.event.pull_request.number || 'production' }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+env:
+  WRANGLER: wrangler@4      # CTO: pin an exact 4.x version when the pipeline is accepted
+
+jobs:
+  preview:
+    if: >-
+      vars.CLOUDFLARE_DEPLOY_ENABLED == 'true' &&
+      github.event_name == 'pull_request' && github.event.action != 'closed' &&
+      github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with: { persist-credentials: false }
+      - run: rustup show active-toolchain || rustup toolchain install
+      - uses: actions/setup-node@v4
+        with: { node-version: 22 }
+      - name: Build the page
+        run: ./build.sh && cp dist/fondue-demo.html dist/index.html
+      - id: preview
+        name: Create or update Worker Preview
+        run: |
+          set -euo pipefail
+          out="$(npx --yes "$WRANGLER" preview --name "pr-${{ github.event.pull_request.number }}" --json)"
+          url="$(printf '%s' "$out" | jq -er '.preview.urls[0]')"
+          echo "url=$url" >> "$GITHUB_OUTPUT"
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+      - name: Comment the preview URL
+        run: |
+          gh pr comment "${{ github.event.pull_request.number }}" --repo "${{ github.repository }}" --edit-last --create-if-none \
+            --body "Preview for review: ${{ steps.preview.outputs.url }}"
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  cleanup:
+    if: >-
+      vars.CLOUDFLARE_DEPLOY_ENABLED == 'true' &&
+      github.event_name == 'pull_request' && github.event.action == 'closed' &&
+      github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with: { persist-credentials: false }
+      - uses: actions/setup-node@v4
+        with: { node-version: 22 }
+      - run: npx --yes "$WRANGLER" preview delete --name "pr-${{ github.event.pull_request.number }}" --skip-confirmation
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+
+  production:
+    if: >-
+      vars.CLOUDFLARE_DEPLOY_ENABLED == 'true' && github.ref == 'refs/heads/main' &&
+      (github.event_name == 'push' || github.event_name == 'workflow_dispatch')
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    environment: production        # optional: add Patrick as a required reviewer on this environment
+    steps:
+      - uses: actions/checkout@v4
+        with: { persist-credentials: false }
+      - run: rustup show active-toolchain || rustup toolchain install
+      - uses: actions/setup-node@v4
+        with: { node-version: 22 }
+      - name: Build the page
+        run: ./build.sh && cp dist/fondue-demo.html dist/index.html
+      - run: npx --yes "$WRANGLER" deploy
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}

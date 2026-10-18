@@ -1,0 +1,14 @@
+{
+  // Cloudflare Worker serving the static Fondue demo (Workers static assets).
+  "name": "fondue",
+  "compatibility_date": "2026-10-01",
+  "assets": {
+    "directory": "./dist"
+  },
+  // Custom domain: the first `wrangler deploy` creates the DNS record and certificate.
+  // The deploy token needs only Workers Scripts Edit (account) + Zone Read (specdlc.com).
+  "routes": [{ "pattern": "fondue.specdlc.com", "custom_domain": true }],
+  "workers_dev": false,
+  // Worker Previews need a previews block; it can be empty.
+  "previews": {}
+}
