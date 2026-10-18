@@ -1,0 +1,8 @@
+# Workers static assets: custom response headers (copied into dist/ by build.sh).
+# Declare UTF-8 so the page never renders as mojibake.
+/
+  Content-Type: text/html; charset=utf-8
+/index.html
+  Content-Type: text/html; charset=utf-8
+/fondue-demo.html
+  Content-Type: text/html; charset=utf-8
