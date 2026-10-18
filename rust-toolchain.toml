@@ -1,0 +1,5 @@
+# Pinned so CI and local builds agree, and so the wasm32 std is installed up front.
+[toolchain]
+channel = "1.85.1"
+targets = ["wasm32-unknown-unknown"]
+profile = "minimal"
