@@ -5,6 +5,8 @@
 #   manual run on main             -> production deploy (use once after enabling deploys)
 # Fork PRs never get secrets (pull_request, not pull_request_target).
 # Off until the repo variable CLOUDFLARE_DEPLOY_ENABLED is "true" (Patrick flips it).
+# CLOUDFLARE_API_TOKEN and CLOUDFLARE_ACCOUNT_ID are the SpecDLC organization Actions secrets.
+# Only a job with environment: preview or environment: production may read them.
 name: Deploy
 
 on:
@@ -23,7 +25,7 @@ concurrency:
   cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 env:
-  WRANGLER: wrangler@4      # CTO: pin an exact 4.x version when the pipeline is accepted
+  WRANGLER: wrangler@4.151.2   # exact 4.x; `wrangler preview` and `wrangler preview delete` are supported
 
 jobs:
   preview:
@@ -33,11 +35,12 @@ jobs:
       github.event.pull_request.head.repo.full_name == github.repository
     runs-on: ubuntu-latest
     timeout-minutes: 20
+    environment: preview
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
         with: { persist-credentials: false }
       - run: rustup show active-toolchain || rustup toolchain install
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
         with: { node-version: 22 }
       - name: Build the page
         run: ./build.sh && cp dist/fondue-demo.html dist/index.html
@@ -64,10 +67,11 @@ jobs:
       github.event_name == 'pull_request' && github.event.action == 'closed' &&
       github.event.pull_request.head.repo.full_name == github.repository
     runs-on: ubuntu-latest
+    environment: preview
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
         with: { persist-credentials: false }
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
         with: { node-version: 22 }
       - run: npx --yes "$WRANGLER" preview delete --name "pr-${{ github.event.pull_request.number }}" --skip-confirmation
         env:
@@ -80,12 +84,12 @@ jobs:
       (github.event_name == 'push' || github.event_name == 'workflow_dispatch')
     runs-on: ubuntu-latest
     timeout-minutes: 20
-    environment: production        # optional: add Patrick as a required reviewer on this environment
+    environment: production        # merging to main is already the approval to deploy; do not add a required reviewer
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
         with: { persist-credentials: false }
       - run: rustup show active-toolchain || rustup toolchain install
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
         with: { node-version: 22 }
       - name: Build the page
         run: ./build.sh && cp dist/fondue-demo.html dist/index.html

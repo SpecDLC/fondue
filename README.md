@@ -2,7 +2,7 @@
 
 > A recipe graph for engineering-minded cooks.
 
-**Live:** https://fondue.specdlc.com (coming soon) · **Part of:** [SpecDLC](https://specdlc.com), spec-driven delivery with acceptance criteria as the contract.
+**Live:** https://fondue.specdlc.com · **Part of:** [SpecDLC](https://specdlc.com), spec-driven delivery with acceptance criteria as the contract.
 
 Butter is an ingredient, béchamel is a component, mac and cheese is a dish, Sunday dinner is a meal. In Fondue they are all the same kind of node, and the zoom level comes from how they nest. Recipes are data, and every view (a printed sheet, a live step on a tablet, a lockfile) is a projection of that data.
 
