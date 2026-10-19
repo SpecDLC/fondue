@@ -7,7 +7,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700&family=Barlow:wght@400;500;600&family=JetBrains+Mono:wght@500;700&display=swap">
 <style>
-/* Layout: a kitchen datasheet. Cook controls · resolved sheet · portal, with the lockfile and event log underneath. */
+/* Layout: four sections behind a hash router: Cook, Make it yours, Compare & share, Under the hood. */
 :root {
   --bg: #FBFBF8; --panel: #FFFFFF; --ink: #17191C; --muted: #50555B; --rule: #D6D8DA; --soft: #EEEFEB;
   --attend: #C8411B; --ok: #2F6F4E; --variant: #8A5A00; --bad: #8E3B8C; --pick: #DDE7F2; --pick-ink: #1F4E80;
@@ -30,15 +30,22 @@ h2 { font-size: 15px; letter-spacing: .14em; text-transform: uppercase; border-b
 .cap { font-family: var(--display); font-weight: 600; font-size: 12px; letter-spacing: .14em; text-transform: uppercase; color: var(--muted); }
 .mono { font-family: var(--mono); font-variant-numeric: tabular-nums; }
 .muted { color: var(--muted); }
-header { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: flex-end; gap: 12px 24px; border-bottom: 3px solid var(--ink); padding-bottom: 12px; }
-header p { margin: 4px 0 0; color: var(--muted); max-width: 70ch; }
+header.top { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 8px 24px; border-bottom: 3px solid var(--ink); padding-bottom: 8px; }
+.brand { font-family: var(--display); font-size: 30px; line-height: 1; letter-spacing: .01em; }
+#nav { display: flex; flex: 1 1 380px; max-width: 640px; border: 1px solid var(--ink); }
+#nav a { flex: 1 1 0; min-width: 0; display: flex; align-items: center; justify-content: center; text-align: center; min-height: 44px; padding: 2px 6px; font: 600 14px var(--body); border-right: 1px solid var(--rule); background: var(--panel); color: var(--ink); text-decoration: none; }
+#nav a:last-child { border-right: 0; }
+#nav a[aria-current="page"] { background: var(--ink); color: var(--bg); }
+#nav a:focus-visible { outline: 3px solid var(--pick-ink); outline-offset: 1px; }
 .stats { display: flex; flex-wrap: wrap; border: 1px solid var(--ink); }
 .stats div { padding: 6px 12px; display: flex; flex-direction: column; border-right: 1px solid var(--rule); }
 .stats div:last-child { border-right: 0; }
 .stats b { font-family: var(--mono); font-size: 17px; }
-.grid { display: grid; grid-template-columns: 300px minmax(0, 1fr) 420px; gap: 28px; align-items: start; }
-@media (max-width: 1180px) { .grid { grid-template-columns: 280px minmax(0, 1fr); } .portal { grid-column: 1 / -1; } }
+.grid { display: grid; grid-template-columns: 300px minmax(0, 1fr); gap: 28px; align-items: start; }
 @media (max-width: 760px) { .grid { grid-template-columns: minmax(0, 1fr); } }
+.cmp { display: flex; flex-direction: column; gap: 28px; }
+.cmp2 { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 28px; align-items: start; }
+@media (max-width: 900px) { .cmp2 { grid-template-columns: minmax(0, 1fr); } }
 section { display: flex; flex-direction: column; gap: 12px; min-width: 0; }
 .field { display: flex; flex-direction: column; gap: 6px; }
 .seg { display: flex; flex-wrap: wrap; border: 1px solid var(--ink); }
@@ -82,110 +89,187 @@ button:focus-visible, select:focus-visible, input:focus-visible { outline: 3px s
 .fold { display: flex; flex-wrap: wrap; gap: 6px 12px; align-items: center; border: 2px solid var(--ink); padding: 6px 10px; background: var(--panel); cursor: pointer; font: inherit; color: inherit; text-align: left; width: 100%; }
 .fold b { font-size: 16px; }
 
-/* portal */
-table { border-collapse: collapse; width: 100%; font-size: 14px; }
-th { text-align: left; font-family: var(--display); font-weight: 600; font-size: 12px; letter-spacing: .12em; text-transform: uppercase; color: var(--muted); border-bottom: 2px solid var(--ink); padding: 4px 6px; }
-td { border-bottom: 1px solid var(--rule); padding: 6px; vertical-align: top; }
-td.num { font-family: var(--mono); text-align: right; white-space: nowrap; }
-tr.chosen td { background: var(--pick); }
-.tablebox { overflow-x: auto; }
-.rate { display: flex; gap: 2px; }
-.rate button { font: 700 12px var(--mono); width: 26px; height: 28px; border: 1px solid var(--rule); background: var(--panel); color: var(--ink); cursor: pointer; }
-.rate button:hover { border-color: var(--ink); }
+/* other ways to make it: cards, so the Rate buttons can wrap instead of overflowing */
+.opts { display: flex; flex-direction: column; }
+.opt { display: flex; flex-wrap: wrap; gap: 8px 24px; align-items: flex-start; justify-content: space-between; border-bottom: 1px solid var(--rule); padding: 10px 8px; }
+.opt.chosen { background: var(--pick); }
+.opt > div { min-width: 0; }
+.o-main { flex: 1 1 260px; display: flex; flex-direction: column; gap: 3px; }
+.o-score { flex: 0 1 150px; font-family: var(--mono); }
+.o-rate { flex: 0 0 auto; display: flex; flex-direction: column; gap: 4px; }
+.o-use { flex: 0 0 72px; }
+.rate { display: flex; flex-wrap: wrap; gap: 3px; }
+.rate button { font: 700 14px var(--mono); width: 34px; height: 36px; border: 1px solid var(--ink); background: var(--panel); color: var(--ink); cursor: pointer; }
+.rate button:hover { background: var(--soft); }
 pre { font-family: var(--mono); font-size: 12px; line-height: 1.55; margin: 0; padding: 12px; background: var(--soft); overflow-x: auto; }
 .lockline.changed { background: var(--pick); color: var(--pick-ink); }
-.bottom { display: grid; grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr); gap: 28px; }
+.bottom { display: grid; grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr); gap: 28px; margin-top: 18px; }
 @media (max-width: 900px) { .bottom { grid-template-columns: minmax(0, 1fr); } }
 .toast { min-height: 20px; font-size: 13px; font-family: var(--mono); }
 .toast.err { color: var(--bad); }
 .diff { display: flex; flex-direction: column; gap: 2px; font-size: 13px; }
 .boot { padding: 20px; border: 2px dashed var(--ink); }
 @media (prefers-reduced-motion: no-preference) { .lockline.changed { transition: background .6s; } }
+
+/* cook · the first screen */
+.ck { display: flex; flex-direction: column; gap: 10px; }
+.ck-bar { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; border-bottom: 3px solid var(--ink); padding-bottom: 6px; }
+.ck-bar b { font-family: var(--display); font-size: 26px; letter-spacing: .01em; }
+.tabs { display: flex; border: 1px solid var(--ink); }
+.tabs button { flex: 1 1 0; font: 600 14px var(--body); min-height: 44px; border: 0; border-right: 1px solid var(--rule); background: var(--panel); color: var(--ink); cursor: pointer; }
+.tabs button:last-child { border-right: 0; }
+.tabs button[aria-selected="true"] { background: var(--ink); color: var(--bg); }
+.ck-pane { display: flex; flex-direction: column; gap: 10px; min-width: 0; }
+.ck-meta { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 2px 12px; font-size: 13px; color: var(--muted); }
+.ck-bars { display: flex; gap: 3px; }
+.ck-bars i { flex: 1 1 0; height: 5px; background: var(--rule); }
+.ck-bars i.done { background: var(--ink); }
+.ck-bars i.now { background: var(--attend); }
+.ck-step { border: 2px solid var(--ink); background: var(--panel); padding: 10px 12px; display: flex; flex-direction: column; gap: 8px; min-width: 0; }
+.ck-verb { font-family: var(--display); font-weight: 700; font-size: 30px; line-height: 1; letter-spacing: .03em; display: flex; gap: 10px; align-items: baseline; flex-wrap: wrap; }
+.ck-text { font-size: 20px; line-height: 1.25; overflow-wrap: anywhere; }
+.ck-row { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.ck-timer { font: 700 17px var(--body); min-height: 48px; flex: 1 1 auto; border: 2px solid var(--ink); background: var(--panel); color: var(--ink); cursor: pointer; padding: 6px 12px; }
+.ck-timer.run { background: var(--ink); color: var(--bg); }
+.ck-timer.up { background: var(--attend); border-color: var(--attend); color: #fff; }
+.ck-cue { font-size: 16px; }
+.ck-next { font-size: 14px; color: var(--muted); border-top: 1px solid var(--rule); padding-top: 6px; }
+.ck-nav { display: flex; gap: 8px; }
+.ck-nav button { flex: 1 1 0; min-height: 48px; font-size: 16px; }
+.ck-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; }
+.ck-list li { display: grid; grid-template-columns: 92px minmax(0, 1fr); gap: 8px; padding: 6px 0; border-bottom: 1px solid var(--soft); align-items: baseline; }
+.ck-list li.pick { grid-template-columns: minmax(0, 1fr) auto; }
+.ck-list .q { font: 700 13px var(--mono); text-align: right; }
+.ck-list label { display: flex; gap: 8px; align-items: baseline; min-height: 32px; }
+.ck-rate { display: flex; gap: 6px; flex-wrap: wrap; }
+.ck-rate button { min-width: 48px; min-height: 48px; font: 700 18px var(--mono); border: 1px solid var(--ink); background: var(--panel); color: var(--ink); cursor: pointer; }
+.ck textarea { font: 13px var(--mono); width: 100%; box-sizing: border-box; min-height: 90px; border: 1px solid var(--ink); background: var(--panel); color: var(--ink); padding: 6px; }
+.ck details { border-top: 1px solid var(--rule); padding-top: 6px; }
+.ck summary { cursor: pointer; font-weight: 600; min-height: 32px; }
+
+/* agent strip */
+#agent { position: fixed; left: 0; right: 0; bottom: 0; z-index: 20; background: var(--panel); border-top: 3px solid var(--ink); padding: 6px 12px calc(6px + env(safe-area-inset-bottom)); display: flex; flex-direction: column; gap: 4px; max-width: 100vw; box-sizing: border-box; }
+.ag-head { display: flex; align-items: center; gap: 8px; font-weight: 600; font-size: 14px; }
+.ag-dot { width: 10px; height: 10px; border-radius: 50%; border: 2px solid var(--muted); box-sizing: border-box; }
+#agent.on .ag-dot { background: var(--ok); border-color: var(--ok); }
+#ag-lines { list-style: none; margin: 0; padding: 0; max-height: 108px; overflow-y: auto; display: flex; flex-direction: column; }
+#ag-lines li { display: flex; gap: 8px; align-items: center; justify-content: space-between; min-height: 36px; border-top: 1px solid var(--soft); font-size: 14px; }
+#ag-lines li span { min-width: 0; overflow-wrap: anywhere; }
+#ag-lines li.undone span { text-decoration: line-through; color: var(--muted); }
+#ag-lines button { min-height: 32px; padding: 2px 12px; }
+body { padding-bottom: var(--ag-h, 44px); }
+[hidden] { display: none !important; }
 </style>
 </head>
 <body>
 
 <div class="wrap">
-  <header>
-    <div>
-      <div class="cap">Fondue · prototype 0.1 · Rust → WASM · event-sourced</div>
-      <h1>Butter to Sunday Dinner</h1>
-      <p>One recipe graph, replayed from an event log inside your browser. Change the cook on the left and watch the sheet, the lockfile and the log respond. Nothing is stored on a server.</p>
-    </div>
-    <div class="stats" aria-live="polite">
-      <div><span class="cap">Events</span><b id="s-events">–</b></div>
-      <div><span class="cap">Revisions</span><b id="s-revs">–</b></div>
-      <div><span class="cap">Resolve</span><b id="s-ms">–</b></div>
-      <div><span class="cap">Engine</span><b id="s-wasm">–</b></div>
-    </div>
+  <header class="top">
+    <b class="brand">Fondue</b>
+    <nav id="nav" aria-label="Sections">
+      <a href="#cook" data-route="cook">Cook</a>
+      <a href="#recipe" data-route="recipe">Make it yours</a>
+      <a href="#compare" data-route="compare">Compare &amp; share</a>
+      <a href="#engine" data-route="engine">Under the hood</a>
+    </nav>
   </header>
+  <div class="toast" id="toast" role="status"></div>
 
   <div id="boot" class="boot">Loading the WASM engine…</div>
 
-  <div class="grid" id="app" hidden>
-    <section aria-labelledby="h-cook">
-      <h2 id="h-cook">Cook · patrick</h2>
-      <div class="field"><span class="cap">Open at zoom level</span><div class="seg" id="zoom"></div></div>
-      <div class="field"><label class="cap" for="canon">Canon</label>
-        <select id="canon"><option value="home">Home cooking</option><option value="classical">Classical French</option><option value="none">None / homemade</option></select>
-        <label class="chk"><input type="checkbox" id="std" checked> Also public standards (FDA/USDA)</label>
+  <main class="ck" hidden id="sec-cook" aria-label="Cook">
+    <div class="tabs" role="tablist" id="ck-tabs">
+      <button type="button" role="tab" data-tab="recipe" id="tab-recipe">Recipe</button>
+      <button type="button" role="tab" data-tab="ready" id="tab-ready">Get ready</button>
+      <button type="button" role="tab" data-tab="cook" id="tab-cook">Cook</button>
+    </div>
+    <div class="ck-pane" id="ck-pane" role="tabpanel"></div>
+  </main>
+
+  <div class="grid" id="sec-recipe" hidden>
+    <section aria-labelledby="h-mine">
+      <h2 id="h-mine">Make it yours</h2>
+      <div class="field"><span class="cap">Look at</span><div class="seg" id="zoom"></div></div>
+      <div class="field"><label class="cap" for="canon">Cook by</label>
+        <select id="canon"><option value="home">Home kitchen</option><option value="classical">Classic French</option><option value="none">Anything goes</option></select>
+        <label class="chk"><input type="checkbox" id="std" checked> Also check food-safety basics (FDA/USDA)</label>
       </div>
-      <div class="field"><span class="cap">Contract dial</span><div class="seg" id="dial"></div></div>
-      <div class="field"><label class="cap" for="p-butter">Pantry · butter</label>
-        <select id="p-butter"><option value="">Recipe default</option><option value="i:butter-salted">Salted butter</option><option value="i:kerrygold-unsalted">Kerrygold unsalted</option></select></div>
+      <div class="field"><span class="cap">How strict?</span><div class="seg" id="dial"></div></div>
+      <div class="field"><label class="cap" for="p-butter">In my pantry · butter</label>
+        <select id="p-butter"><option value="">Whatever the recipe says</option><option value="i:butter-salted">Salted butter</option><option value="i:kerrygold-unsalted">Kerrygold unsalted</option></select></div>
       <div class="field"><label class="cap" for="p-milk">Swap · milk in your béchamel</label>
-        <select id="p-milk"><option value="">Recipe default</option><option value="i:oat-milk">Oat milk</option></select>
-        <span class="note">A deliberate swap, so it's a choice, not a pantry default. Try it with the Classical canon on Enforce.</span></div>
-      <div class="field"><label class="cap" for="p-cheese">Pantry · melting cheese</label>
-        <select id="p-cheese"><option value="">Recipe default</option><option value="i:cheddar-shredded">Pre-shredded cheddar</option><option value="i:velveeta">Velveeta</option></select></div>
-      <label class="chk"><input type="checkbox" id="know"> I already know béchamel (fold it)</label>
-      <p class="note">Every control here appends a <span class="mono">pref</span> event that changes one field. Cook state lives in the same log as recipes.</p>
+        <select id="p-milk"><option value="">Whatever the recipe says</option><option value="i:oat-milk">Oat milk</option></select>
+        <span class="note">A swap is something you pick on purpose, not a pantry habit. Try it with Cook by Classic French and How strict set to Stick to it.</span></div>
+      <div class="field"><label class="cap" for="p-cheese">In my pantry · melting cheese</label>
+        <select id="p-cheese"><option value="">Whatever the recipe says</option><option value="i:cheddar-shredded">Pre-shredded cheddar</option><option value="i:velveeta">Velveeta</option></select></div>
+      <label class="chk"><input type="checkbox" id="know"> I already know béchamel (show it as one line)</label>
+      <p class="note">Your choices are saved in this browser only.</p>
     </section>
 
     <section aria-labelledby="h-sheet">
-      <h2 id="h-sheet">Resolved sheet</h2>
+      <h2 id="h-sheet">Your recipe</h2>
       <div id="sheet"></div>
     </section>
-
-    <section class="portal" aria-labelledby="h-portal">
-      <h2 id="h-portal">Portal · every béchamel</h2>
-      <div class="tablebox"><table>
-        <thead><tr><th>Implementation</th><th>Contract</th><th>Outcomes</th><th>Rate</th><th></th></tr></thead>
-        <tbody id="portal"></tbody>
-      </table></div>
-      <p class="note">Sorted by your first canon's preference, then by cook outcomes. Rate one to add a <span class="mono">cook_log</span>; the order updates.</p>
-
-      <h2>Publish my version</h2>
-      <form id="fork" class="field">
-        <label class="cap" for="f-name">Fork the béchamel in your mac and cheese as</label>
-        <input type="text" id="f-name" value="Patrick's Béchamel">
-        <label class="cap" for="f-ratio">Roux per cup of milk</label>
-        <select id="f-ratio"><option value="1.5">1½ Tbsp (thin)</option><option value="2">2 Tbsp (medium)</option><option value="2.5" selected>2½ Tbsp</option><option value="3">3 Tbsp (thick)</option></select>
-        <label class="cap" for="f-fat">Fat</label>
-        <select id="f-fat"><option value="i:kerrygold-unsalted">Kerrygold unsalted</option><option value="i:butter-unsalted">Butter, unsalted</option><option value="i:olive-oil-ev">Extra-virgin olive oil</option></select>
-        <div style="display:flex;gap:8px;flex-wrap:wrap"><button class="act primary" type="submit">Fork, publish and use it</button></div>
-      </form>
-
-      <h2>Competing heads</h2>
-      <p class="note" style="margin:0">Two cooks edited the same Classic Béchamel. Main follows chef-luc; the Classical canon follows chef-marie. Switch the canon to see the sheet move.</p>
-      <div class="diff" id="heads"></div>
-      <div class="toast" id="toast" role="status"></div>
-    </section>
   </div>
 
-  <div class="bottom" id="bottom" hidden>
-    <section aria-labelledby="h-lock">
-      <h2 id="h-lock">cook.lock</h2>
-      <pre id="lock"></pre>
-      <p class="note">Every pin the sheet resolved to, with how it was chosen. Highlighted lines changed with your last action.</p>
+  <div class="cmp" id="sec-compare" hidden>
+    <section aria-labelledby="h-portal">
+      <h2 id="h-portal">Other ways to make béchamel</h2>
+      <div id="portal" class="opts"></div>
+      <p class="note">Your favourites first, then the ones cooks liked most. Rate one to add how it turned out; the order updates.</p>
     </section>
-    <section aria-labelledby="h-log">
-      <h2 id="h-log">Event log · newest first</h2>
-      <pre id="log"></pre>
-      <div style="display:flex;gap:8px;flex-wrap:wrap"><button class="act" id="reset" type="button">Reset to the seed log</button></div>
+
+    <div class="cmp2">
+      <section aria-labelledby="h-pub">
+        <h2 id="h-pub">Publish my version</h2>
+        <form id="fork" class="field">
+          <label class="cap" for="f-name">Save my version of the béchamel in your mac and cheese as</label>
+          <input type="text" id="f-name" value="Patrick's Béchamel">
+          <label class="cap" for="f-ratio">Butter-and-flour paste (roux) per cup of milk</label>
+          <select id="f-ratio"><option value="1.5">1½ Tbsp (thin)</option><option value="2">2 Tbsp (medium)</option><option value="2.5" selected>2½ Tbsp</option><option value="3">3 Tbsp (thick)</option></select>
+          <label class="cap" for="f-fat">Butter or oil</label>
+          <select id="f-fat"><option value="i:kerrygold-unsalted">Kerrygold unsalted</option><option value="i:butter-unsalted">Butter, unsalted</option><option value="i:olive-oil-ev">Extra-virgin olive oil</option></select>
+          <div style="display:flex;gap:8px;flex-wrap:wrap"><button class="act primary" type="submit">Save my version and share it</button></div>
+        </form>
+      </section>
+      <section aria-labelledby="h-two">
+        <h2 id="h-two">Two cooks, two versions</h2>
+        <p class="note" style="margin:0">Two cooks changed the same Classic Béchamel. Most cooks get chef-luc's version; Cook by Classic French gets chef-marie's. Change Cook by on Make it yours to see the recipe move.</p>
+        <div class="diff" id="heads"></div>
+      </section>
+    </div>
+  </div>
+
+  <div id="sec-engine" hidden>
+    <section aria-labelledby="h-hood">
+      <h2 id="h-hood">Under the hood</h2>
+      <p class="note" style="margin:0;max-width:75ch">Fondue prototype 0.3 · Rust → WASM · event-sourced. One recipe graph, replayed from an event log inside your browser. Change the canon or the contract dial and watch the sheet, the lockfile and the log respond. Nothing is stored on a server.</p>
+      <div class="stats" aria-live="polite">
+        <div><span class="cap">Events</span><b id="s-events">–</b></div>
+        <div><span class="cap">Revisions</span><b id="s-revs">–</b></div>
+        <div><span class="cap">Resolve</span><b id="s-ms">–</b></div>
+        <div><span class="cap">Engine</span><b id="s-wasm">–</b></div>
+      </div>
+      <div class="field" style="max-width:420px"><span class="cap">Contract dial</span><div class="seg" id="dial-e"></div></div>
     </section>
+    <div class="bottom">
+      <section aria-labelledby="h-lock">
+        <h2 id="h-lock">cook.lock</h2>
+        <pre id="lock"></pre>
+        <p class="note">Every pin the sheet resolved to, with how it was chosen. Highlighted lines changed with your last action.</p>
+      </section>
+      <section aria-labelledby="h-log">
+        <h2 id="h-log">Event log · newest first</h2>
+        <pre id="log"></pre>
+        <div style="display:flex;gap:8px;flex-wrap:wrap"><button class="act" id="reset" type="button">Reset to the seed log</button></div>
+      </section>
+    </div>
   </div>
 </div>
+<aside id="agent" hidden aria-label="Agent activity">
+  <div class="ag-head"><span class="ag-dot" aria-hidden="true"></span><span id="ag-status" role="status">No agent connected</span></div>
+  <ol id="ag-lines" aria-label="What the agent did"></ol>
+</aside>
 
 <script>
 const WASM_B64 = "__WASM_B64__";
@@ -244,50 +328,66 @@ function segmented(el, items, current, onPick) {
 
 const short = (r) => r.slice(0, 7);
 const mins = (m) => (Math.round(m * 10) / 10) + " min";
-function checkBadge(c) {
-  if (!c || c.status === "unchecked") return `<span class="badge st-unchecked">unchecked</span>`;
-  const why = [...c.must_fail, ...c.should_fail].join(", ");
-  const label = { ok: "✓ " + c.canon, deviates: "⇄ deviates", violates: "✕ violates", blocked: "✕ blocked" }[c.status];
-  return `<span class="badge st-${c.status}" title="${esc(why)}">${esc(label)}</span>${why ? ` <span class="note">${esc(why)}</span>` : ""}`;
+/* Words on screen: the engine keeps its names; the page says them the home-kitchen way. */
+const CANON_NAMES = { home: "Home kitchen", classical: "Classic French", none: "Anything goes", "public-standards": "food-safety basics" };
+const canonName = (id) => CANON_NAMES[id] || String(id).replace(/[-_]/g, " ");
+const KIND_NAMES = { component: "building block", concept: "kind", item: "ingredient", preparation: "recipe", gathering: "meal" };
+let names = new Map();
+function refreshNames() { names = new Map(call({ op: "catalog" }).map((c) => [c.node, c.name])); }
+const nameOf = (id) => names.get(id) || String(id).replace(/^[a-z]:/, "").replace(/[-_]/g, " ");
+/* A plain sentence from an engine reason: ids become names, revision hashes and canon tags go. */
+const friendly = (t) => String(t).replace(/\(canon:[\w-]+: ?/g, "(").replace(/\b[picg]:[\w-]+/gi, (m) => nameOf(m)).replace(/@[0-9a-f]{7,}/g, "").replace(/\b[0-9a-f]{7,}\b/g, "");
+/* "Classic Béchamel (classical: dairy liquid)" becomes "Classic Béchamel is not really béchamel: needs dairy liquid". */
+function notUsed(x, concept) {
+  const m = String(x).match(/^(.*) \([\w-]+: (.*)\)$/);
+  return m ? `${friendly(m[1])} is not really ${nameOf(concept).toLowerCase()}: needs ${friendly(m[2])}` : "Not used: " + friendly(x);
+}
+const viaText = (v) => v === "pantry" ? "from your pantry" : v === "choice" ? "you picked" : v.startsWith("canon:") ? "suggested by " + canonName(v.slice(6)) : "";
+const levelText = (l) => ({ component: "building block" }[l] || l);
+const fmtFacts = (f) => Object.entries(f).map(([k, v]) => `${k.replace(/_/g, " ")}: ${v}`).join(" · ");
+/* A badge only when a check fails; a pass says nothing. */
+function checkBadge(c, what) {
+  if (!c || c.status === "unchecked" || c.status === "ok") return "";
+  const subj = (what || "that").toLowerCase();
+  if (c.status === "deviates") return `<span class="badge st-deviates">Your twist</span> <span class="note">usually ${esc(c.should_fail.map(friendly).join(", "))}</span>`;
+  return `<span class="badge st-violates">Not really ${esc(subj)}:</span> <span class="note">needs ${esc(c.must_fail.map(friendly).join(", "))}</span>`;
 }
 
 function renderNode(n, ctx) {
   const isPrep = n.kind === "preparation" || n.kind === "gathering";
-  const attend = n.attend.length ? `<span class="attend">▲ ${n.attend.length}</span>` : "";
+  const attend = n.attend.length ? `<span class="attend">▲ Stay close ×${n.attend.length}</span>` : "";
   if (n.folded && !unfolded.has(ctx)) {
     return `<button type="button" class="fold" data-unfold="${esc(ctx)}" aria-expanded="false"><b>▸ ${esc(n.name)}</b>
       <span class="mono">${esc(n.yields)} · ${mins(n.total_mins)}</span>
-      ${n.attend.map((a) => `<span class="attend">▲ ${esc(a.verb)}</span>`).join(" ")}
-      <span class="via">${esc(n.node)}@${short(n.rev)} · known ✓</span></button>`;
+      ${n.attend.map((a) => `<span class="attend">▲ ${esc(plain(a.verb))}</span>`).join(" ")}
+      <span class="note">I know this one · tap to open</span></button>`;
   }
   let h = `<div class="node"><div class="nhead"><span class="nname">${esc(n.name)}</span>
-    <span class="badge lvl">${esc(n.level)}</span>
-    <span class="via">${esc(n.node)}@${short(n.rev)} · by ${esc(n.author)}</span>
+    <span class="badge lvl">${esc(levelText(n.level))}</span>
+    <span class="note">by ${esc(n.author)}</span>
     ${n.brand ? `<span class="badge">${esc(n.brand)}</span>` : ""}
     ${isPrep ? `<span class="mono">${esc(n.yields)}${n.yields ? " · " : ""}${mins(n.total_mins)}</span>` : ""} ${attend}
-    ${n.folded ? `<button type="button" class="act" data-refold="${esc(ctx)}">Fold</button>` : ""}</div>`;
-  if (n.kind === "item") {
-    const f = Object.entries(n.facts).map(([k, v]) => `${k}: ${v}`).join(" · ");
-    h += `<div class="note mono">${esc(f || "no facts")}</div>`;
-  }
-  if (n.deltas.length) h += `<div class="deltas">${n.deltas.map((d) => `<div class="delta">Δ ${esc(d)}</div>`).join("")}</div>`;
+    ${n.folded ? `<button type="button" class="act" data-refold="${esc(ctx)}">I know this one</button>` : ""}</div>`;
+  if (n.kind === "item" && Object.keys(n.facts).length) h += `<div class="note mono">${esc(fmtFacts(n.facts))}</div>`;
+  if (n.deltas.length) h += `<div class="deltas">${n.deltas.map((d) => `<div class="delta">Because you picked this: ${esc(d)}</div>`).join("")}</div>`;
   if (n.slots.length) {
     h += `<div class="slots">`;
     for (const s of n.slots) {
       const key = `${n.node}/${s.id}`;
       const c = s.child;
+      const via = viaText(s.via);
       h += `<div class="slot${s.dropped ? " dropped" : ""}"><span class="qty">${esc(s.qty)}</span><div class="what">
-        <span>${c ? `<b>${esc(c.name)}</b>` : `<i>unbound</i>`}</span>
-        <span class="via">${esc(s.role)} · via ${esc(s.via)}</span>
-        ${s.substituted ? `<span class="sub">⇄ swapped</span>` : ""}
-        ${s.dropped ? `<span class="badge">dropped by delta</span>` : (c ? checkBadge(s.check) : "")}
-        ${s.blocked.length ? `<span class="note st-blocked">refused: ${esc(s.blocked.join("; "))}</span>` : ""}</div>`;
+        <span>${c ? `<b>${esc(c.name)}</b>` : `<i>pick one</i>`}</span>
+        <span class="note">${esc(s.role)}${via ? " · " + via : ""}</span>
+        ${s.substituted ? `<span class="sub">Your swap</span>` : ""}
+        ${s.dropped ? `<span class="badge">left out</span>` : (c ? checkBadge(s.check, nameOf(s.concept)) : "")}
+        ${s.blocked.length ? `<span class="note st-blocked">${esc(s.blocked.map((x) => notUsed(x, s.concept)).join("; "))}</span>` : ""}</div>`;
       if (s.needs_choice && !s.dropped) {
         const opts = call({ op: "portal", concept: s.concept, cook: COOK });
-        h += `<div class="ask"><span>Ask once:</span>
+        h += `<div class="ask"><span>Which one?</span>
           <select data-choose="${esc(key)}" aria-label="Choose ${esc(s.role)}">
           ${opts.map((o) => `<option value="${esc(o.node)}"${c && c.node === o.node ? " selected" : ""}>${esc(o.name)} · ★${o.outcome_avg.toFixed(1)}</option>`).join("")}</select>
-          <button type="button" class="act" data-keep="${esc(key)}">Use this</button></div>`;
+          <button type="button" class="act" data-keep="${esc(key)}">Use this</button><span class="note">remembered next time</span></div>`;
       }
       h += `</div>`;
       if (c && c.kind !== "item" && !s.dropped) h += renderNode(c, `${ctx}/${s.id}`);
@@ -296,8 +396,8 @@ function renderNode(n, ctx) {
   }
   if (n.steps.length) {
     h += `<div class="steps">` + n.steps.map((st) => `<div class="step"><span class="t">${st.mins} min</span>
-      <div><span class="v">${esc(st.verb)}</span> ${esc(st.text)} ${st.attend ? `<span class="attend">▲</span>` : ""}
-      ${st.cue ? `<span class="note">· done when ${esc(st.cue)}</span>` : ""}</div></div>`).join("") + `</div>`;
+      <div><span class="v">${esc(plain(st.verb))}</span> ${esc(st.text)} ${st.attend ? `<span class="attend">▲ Stay close</span>` : ""}
+      ${st.cue ? `<span class="note">· ready when ${esc(st.cue)}</span>` : ""}</div></div>`).join("") + `</div>`;
   }
   return h + `</div>`;
 }
@@ -308,9 +408,12 @@ function usingBechamel() {
   return s && !s.dropped && s.child ? s.child.node : null;
 }
 function render() {
+  refreshNames();
+  renderCook();
   const p = profile();
   segmented($("zoom"), ZOOMS, root, (v) => { root = v; render(); });
-  segmented($("dial"), [["off", "Off"], ["advise", "Advise"], ["enforce", "Enforce"]], p.dial, (v) => pref({ op: "dial", dial: v }));
+  segmented($("dial"), [["off", "Relaxed"], ["advise", "Point it out"], ["enforce", "Stick to it"]], p.dial, (v) => pref({ op: "dial", dial: v }));
+  segmented($("dial-e"), [["off", "Off"], ["advise", "Advise"], ["enforce", "Enforce"]], p.dial, (v) => pref({ op: "dial", dial: v }));
   $("canon").value = p.canons.find((c) => c !== "public-standards") || "none";
   $("std").checked = p.canons.includes("public-standards");
   $("p-butter").value = p.pantry["c:butter"] || "";
@@ -333,25 +436,30 @@ function render() {
   }).join("\n");
   lastLock = v.lock;
 
-  // Portal, relative to whatever the mac and cheese currently uses for its sauce.
+  // Other ways to make it, relative to whatever the mac and cheese currently uses for its sauce.
   const mac = call({ op: "view", root: MAC, cook: COOK }).tree;
   const sauceSlot = mac.slots.find((s) => s.id === "sauce");
   const using = sauceSlot && !sauceSlot.dropped ? sauceSlot.child?.node : null;
   const pt = call({ op: "portal", concept: "c:bechamel", cook: COOK });
-  $("portal").innerHTML = pt.map((e) => `<tr class="${e.node === using ? "chosen" : ""}">
-    <td><b>${esc(e.name)}</b><div class="via">${esc(e.author)}${e.forked_from ? ` · fork of ${esc(e.forked_from.node)}` : ""}${e.preferred_by.length ? ` · preferred by ${esc(e.preferred_by.join(", "))}` : ""}</div>
-      ${e.labels.length ? `<div class="note">${esc(e.labels.join(" · "))}</div>` : ""}</td>
-    <td>${checkBadge(e.check)}</td>
-    <td class="num">★ ${e.outcome_avg.toFixed(1)}<div class="via">${e.outcome_n} on this rev</div><div class="via">${e.node_outcome_n} all revs</div></td>
-    <td><div class="rate" role="group" aria-label="Rate ${esc(e.name)}">${[1,2,3,4,5].map((r) => `<button type="button" data-rate="${esc(e.node)}" data-rev="${esc(e.rev)}" data-r="${r}" aria-label="${r} stars">${r}</button>`).join("")}</div></td>
-    <td>${e.node === using ? `<span class="cap">in use</span>` : `<button type="button" class="act" data-use="${esc(e.node)}">Use</button>`}</td></tr>`).join("");
+  $("portal").innerHTML = pt.map((e) => {
+    const labels = e.labels.map((l) => l.replace(/\s*\(canon:([\w-]+)\)/, (m, c) => " by " + canonName(c)).replace(/^./, (c) => c.toUpperCase()));
+    const more = e.node_outcome_n > e.outcome_n ? ` · ${e.node_outcome_n} counting earlier versions` : "";
+    return `<div class="opt${e.node === using ? " chosen" : ""}">
+    <div class="o-main"><b>${esc(e.name)}</b>
+      <span class="note">by ${esc(e.author)}${e.forked_from ? ` · a twist on ${esc(nameOf(e.forked_from.node))}` : ""}${e.preferred_by.length ? ` · preferred by ${esc(e.preferred_by.map(canonName).join(", "))}` : ""}</span>
+      ${labels.length ? `<span class="note">${esc(labels.join(" · "))}</span>` : ""}
+      <span>${checkBadge(e.check, "béchamel")}</span></div>
+    <div class="o-score">★ ${e.outcome_avg.toFixed(1)}<div class="note">from ${e.outcome_n} ${e.outcome_n === 1 ? "cook" : "cooks"}${more}</div></div>
+    <div class="o-rate"><span class="cap">Rate it</span><div class="rate" role="group" aria-label="Rate ${esc(e.name)}">${[1,2,3,4,5].map((r) => `<button type="button" data-rate="${esc(e.node)}" data-rev="${esc(e.rev)}" data-r="${r}" aria-label="${r} stars">${r}</button>`).join("")}</div></div>
+    <div class="o-use">${e.node === using ? `<span class="cap">in use</span>` : `<button type="button" class="act" data-use="${esc(e.node)}">Use</button>`}</div></div>`;
+  }).join("");
 
-  // Competing heads on the classic.
+  // Two cooks, two versions of the classic.
   const cat = call({ op: "catalog" }).find((c) => c.node === "p:bechamel-classic");
   if (cat && cat.tips.length >= 2) {
     const d = call({ op: "diff", a: cat.tips[0], b: cat.tips[1] });
     const who = (r) => call({ op: "get", rev: r }).author;
-    $("heads").innerHTML = `<div class="mono">${esc(who(cat.tips[0]))}@${short(cat.tips[0])} → ${esc(who(cat.tips[1]))}@${short(cat.tips[1])}</div>` +
+    $("heads").innerHTML = `<div><b>${esc(who(cat.tips[0]))}</b> and <b>${esc(who(cat.tips[1]))}</b></div>` +
       d.map((l) => `<div>${esc(l)}</div>`).join("");
   }
 
@@ -364,6 +472,8 @@ function render() {
       : e.type === "profile" ? `${e.profile.cook}: canons [${e.profile.canons.join(", ")}], dial ${e.profile.dial}`
       : e.type === "pref" ? `${e.cook}: ${e.set.op} ${JSON.stringify(Object.fromEntries(Object.entries(e.set).filter(([k]) => k !== "op")))}`
       : e.type === "cook_log" ? `${e.cook} rated ${e.node}@${short(e.rev)} ${e.rating}`
+      : e.type === "session" ? `${e.cook}: ${e.session.active ? "cooking " + e.session.recipe + " step " + (e.session.step + 1) : e.session.recipe || "no recipe open"}`
+      : e.type === "retract" ? `took back #${e.seq}`
       : e.type === "head" ? `${e.scope} → ${e.node}@${short(e.rev)}` : e.type === "canon" ? e.canon.id
       : `${e.node || ""} ${e.label || ""}`;
     return `#${String(n).padStart(3, "0")}  ${e.type.padEnd(9)} ${what}`;
@@ -381,15 +491,15 @@ function wire() {
     const b = ev.target.closest("button"); if (!b) return;
     if (b.dataset.unfold) { unfolded.add(b.dataset.unfold); render(); }
     else if (b.dataset.refold) { unfolded.delete(b.dataset.refold); render(); }
-    else if (b.dataset.keep) { const sel = document.querySelector(`select[data-choose="${CSS.escape(b.dataset.keep)}"]`); pref({ op: "choose", key: b.dataset.keep, node: sel.value }); toast("Choice saved. Asked once."); }
-    else if (b.dataset.use) { pref({ op: "choose", key: MAC + "/sauce", node: b.dataset.use }); toast("Mac and cheese now uses " + b.dataset.use); }
-    else if (b.dataset.rate) { if (append({ type: "cook_log", cook: COOK, node: b.dataset.rate, rev: b.dataset.rev, rating: +b.dataset.r, note: "" })) { render(); toast(`Rated ${b.dataset.r}. Portal re-sorted.`); } }
+    else if (b.dataset.keep) { const sel = document.querySelector(`select[data-choose="${CSS.escape(b.dataset.keep)}"]`); pref({ op: "choose", key: b.dataset.keep, node: sel.value }); toast("Saved. We'll remember this pick."); }
+    else if (b.dataset.use) { pref({ op: "choose", key: MAC + "/sauce", node: b.dataset.use }); toast("Mac and cheese now uses " + nameOf(b.dataset.use)); }
+    else if (b.dataset.rate) { if (append({ type: "cook_log", cook: COOK, node: b.dataset.rate, rev: b.dataset.rev, rating: +b.dataset.r, note: "" })) { render(); toast(`Rated ${b.dataset.r}. The order is updated.`); } }
   });
   $("fork").onsubmit = (ev) => {
     ev.preventDefault();
     const mac = call({ op: "view", root: MAC, cook: COOK }).tree;
     const sauce = mac.slots.find((s) => s.id === "sauce");
-    if (sauce?.dropped) { toast("Your cheese choice removed the béchamel. Switch the cheese back to fork one.", true); return; }
+    if (sauce?.dropped) { toast("Your cheese choice left out the béchamel. Switch the cheese back to save your own version.", true); return; }
     const src = sauce?.child;
     if (!src) { toast("Pick a béchamel for the mac and cheese first.", true); return; }
     const rev = call({ op: "get", rev: src.rev });
@@ -407,9 +517,375 @@ function wire() {
     append({ type: "publish", node, rev: "^", by: COOK });
     pref({ op: "choose", key: MAC + "/sauce", node });
     const d = call({ op: "diff", a: src.rev, b: call({ op: "catalog" }).find((c) => c.node === node).tips.slice(-1)[0] });
-    toast(`Published ${node}. Changes: ${d.join("; ")}`);
+    refreshNames(); toast(`Published ${nameOf(node)}. What changed: ${d.join("; ")}`);
   };
-  $("reset").onclick = () => { try { localStorage.removeItem("fondue.log.v2"); } catch (e) {} call({ op: "load", events: JSON.parse(seedJson) }); lastLock = []; unfolded.clear(); render(); toast("Reset to the seed log."); };
+  $("reset").onclick = () => { try { localStorage.removeItem("fondue.log.v2"); } catch (e) {} call({ op: "load", events: JSON.parse(seedJson) }); lastLock = []; unfolded.clear(); agent.lines = []; ui.finished = null; ui.tab = null; render(); toast("Reset to the seed log."); };
+}
+
+/* ===== cook: session in the log, the agent strip, and window.fondue ===== */
+/* ---- the four sections, by hash. UI only: moving between them is not an event. ---- */
+const ROUTES = ["cook", "recipe", "compare", "engine"];
+let route = "cook";
+function showRoute() {
+  const h = location.hash.replace(/^#/, "");
+  route = ROUTES.includes(h) ? h : "cook";
+  for (const r of ROUTES) $("sec-" + r).hidden = r !== route;
+  document.querySelectorAll("#nav a").forEach((a) => { if (a.dataset.route === route) a.setAttribute("aria-current", "page"); else a.removeAttribute("aria-current"); });
+  window.scrollTo(0, 0);
+}
+const AGENT_MS = 10 * 60 * 1000;
+const PLAIN = { SWEAT: "SOFTEN", MONTER: "STIR IN", DEGLAZE: "SCRAPE THE PAN" };
+const plain = (v) => PLAIN[String(v).toUpperCase()] || String(v).toUpperCase();
+const clone = (o) => JSON.parse(JSON.stringify(o));
+const fmtMin = (m) => String(Math.round(m * 10) / 10);
+const ui = { tab: null, finished: null, msg: "", serve: "", paste: "", ready: new Set(), wasActive: false };
+const agent = { last: 0, lines: [], n: 0 };
+let lastSess = { timers: [] }, chimed = new Set();
+
+function rawAppend(event) { const r = call({ op: "append", event }); save(); return r; }
+function sess() { return call({ op: "session", cook: COOK }); }
+function putSession(s) { return rawAppend({ type: "session", cook: COOK, session: s }); }
+const isRecipeKind = (c) => c.kind === "preparation" || c.kind === "gathering";
+function nodeId(raw) {
+  const id = typeof raw === "string" ? raw.trim() : "";
+  if (!id) throw new Error("id: missing");
+  return id.includes(":") ? id : "p:" + id;
+}
+function recipeList() {
+  const retired = sess().retired;
+  return call({ op: "catalog" }).filter((c) => isRecipeKind(c) && !retired.includes(c.node));
+}
+function treeOf(node) {
+  if (!recipeList().some((c) => c.node === node)) throw new Error("unknown recipe " + node);
+  return call({ op: "view", root: node, cook: COOK }).tree;
+}
+/* The step sequence: each building block's steps come before the dish that uses it. */
+function flatten(n, out = []) {
+  for (const s of n.slots) if (!s.dropped && s.child && s.child.kind === "preparation") flatten(s.child, out);
+  for (const st of n.steps) out.push({ ...st, from: n.name });
+  return out;
+}
+function leafSlots(n, out = []) {
+  for (const s of n.slots) {
+    if (s.dropped) continue;
+    if (s.child && s.child.kind === "preparation") leafSlots(s.child, out);
+    else out.push({ qty: s.qty, role: s.role, name: s.child ? s.child.name : null, from: n.name });
+  }
+  return out;
+}
+const about = (steps) => Math.round(steps.reduce((a, s) => a + s.mins, 0));
+function current() {
+  const s = sess();
+  if (!s.recipe) return { s, tree: null, steps: [] };
+  try { const tree = treeOf(s.recipe); return { s, tree, steps: flatten(tree) }; }
+  catch (e) { return { s, tree: null, steps: [] }; }
+}
+const stepView = (st) => ({ verb: st.verb, text: st.text, mins: st.mins, attend: st.attend, cue: st.cue, uses: st.uses });
+
+/* Each act appends events and returns { data, sentence, undo }. `undo` is the list of events that put things back. */
+const acts = {
+  load(input) {
+    let recipe = input;
+    if (typeof recipe === "string") { try { recipe = JSON.parse(recipe); } catch (e) { throw new Error("recipe: not valid JSON (" + e.message + ")"); } }
+    const before = sess();
+    const r = call({ op: "import", recipe, cook: COOK });
+    const after = clone(before); after.recipe = r.node; after.retired = before.retired.filter((x) => x !== r.node);
+    const restore = clone(before);
+    if (!r.prev_rev) restore.retired = [...new Set([...before.retired, r.node])];
+    const undo = [];
+    if (r.prev_rev && r.rev !== r.prev_rev) undo.push({ type: "head", scope: "main", node: r.node, rev: r.prev_rev, by: COOK });
+    undo.push({ type: "session", cook: COOK, session: restore });
+    putSession(after);
+    const title = call({ op: "view", root: r.node, cook: COOK }).tree.name;
+    return { data: { id: r.node, title, created: r.created, unchanged: r.unchanged }, sentence: "Loaded " + title, undo };
+  },
+  choose(input) {
+    const { s, tree } = current();
+    const recipe = input.recipe ? treeOf(nodeId(input.recipe)) : tree;
+    if (!recipe) throw new Error("recipe: no recipe is open; pass recipe or load one first");
+    const slot = text(input, "slot"), option = text(input, "option");
+    const all = [];
+    (function walk(n) { for (const sl of n.slots) { all.push({ key: n.node + "/" + sl.id, sl }); if (sl.child && sl.child.kind !== "item") walk(sl.child); } })(recipe);
+    const hit = all.filter((x) => x.key === slot || x.sl.id === slot);
+    if (!hit.length) throw new Error("slot: no ingredient line named " + slot + " (try " + all.map((x) => x.key).join(", ") + ")");
+    if (hit.length > 1) throw new Error("slot: " + slot + " is ambiguous; use one of " + hit.map((x) => x.key).join(", "));
+    const { key, sl } = hit[0];
+    const opts = call({ op: "portal", concept: sl.concept, cook: COOK });
+    const o = opts.find((e) => e.node === option);
+    if (!o) throw new Error("option: " + option + " is not one of " + opts.map((e) => e.node).join(", "));
+    const prev = profile().choices[key] ?? null;
+    rawAppend({ type: "pref", cook: COOK, set: { op: "choose", key, node: option } });
+    return { data: { slot: key, option }, sentence: "Picked " + o.name + " for " + sl.role, undo: [{ type: "pref", cook: COOK, set: { op: "choose", key, node: prev } }] };
+  },
+  pantry(input) {
+    const concept = text(input, "concept");
+    const c = call({ op: "catalog" }).find((x) => x.node === concept && x.kind === "concept");
+    if (!c) throw new Error("concept: unknown " + concept);
+    const item = input.item == null ? null : text(input, "item");
+    let name = null;
+    if (item) {
+      const o = call({ op: "portal", concept, cook: COOK }).find((e) => e.node === item);
+      if (!o) throw new Error("item: " + item + " is not a kind of " + c.name.toLowerCase());
+      name = o.name;
+    }
+    const prev = profile().pantry[concept] ?? null;
+    rawAppend({ type: "pref", cook: COOK, set: { op: "pantry", concept, node: item } });
+    return { data: { concept, item }, sentence: item ? "Set " + c.name.toLowerCase() + " in your pantry to " + name : "Cleared " + c.name.toLowerCase() + " from your pantry", undo: [{ type: "pref", cook: COOK, set: { op: "pantry", concept, node: prev } }] };
+  },
+  start(input) {
+    const node = nodeId(input.id);
+    const tree = treeOf(node), steps = flatten(tree);
+    if (!steps.length) throw new Error("id: " + node + " has no steps to cook");
+    let serve = input.serve_at ?? null;
+    if (serve !== null && (typeof serve !== "string" || serve.length > 40)) throw new Error("serve_at: must be short text such as \"6:30 PM\"");
+    const before = sess();
+    putSession({ recipe: node, active: true, step: 0, serve_at: serve || null, timers: [], retired: before.retired });
+    return { data: { id: node, title: tree.name, steps_total: steps.length, about_mins: about(steps) }, sentence: "Started cooking " + tree.name, undo: [{ type: "session", cook: COOK, session: before }] };
+  },
+  move(delta) {
+    const { s, steps } = current();
+    if (!s.active) throw new Error("No cook is in progress; call start_cook first");
+    const next = s.step + delta;
+    if (next < 0) throw new Error("Already on the first step");
+    if (next >= steps.length) throw new Error("Already on the last step");
+    putSession({ ...clone(s), step: next });
+    return { data: { step: next + 1, steps_total: steps.length, ...stepView(steps[next]) }, sentence: (delta > 0 ? "Moved to" : "Went back to") + " step " + (next + 1) + " of " + steps.length + ": " + plain(steps[next].verb), undo: [{ type: "session", cook: COOK, session: s }] };
+  },
+  timer(input) {
+    const { s, steps } = current();
+    let idx = s.step;
+    if (input.step != null) {
+      if (!Number.isInteger(input.step) || input.step < 1 || input.step > steps.length) throw new Error("step: must be a whole number from 1 to " + steps.length);
+      idx = input.step - 1;
+    } else if (!s.active) throw new Error("step: no cook is in progress, so say which step");
+    const st = steps[idx];
+    if (!st) throw new Error("step: no recipe is open");
+    const mins = input.mins ?? st.mins;
+    if (typeof mins !== "number" || !(mins > 0) || mins > 1440) throw new Error("mins: must be a number above 0 and at most 1440");
+    if (input.label != null && (typeof input.label !== "string" || !input.label.trim() || input.label.length > 40)) throw new Error("label: must be short text");
+    const now = Date.now();
+    if (s.timers.some((t) => t.step === idx && now < t.at + t.mins * 60000)) throw new Error("A timer for step " + (idx + 1) + " is already running");
+    const label = (input.label || st.verb).trim().toLowerCase();
+    const t = { id: "t" + call({ op: "events" }).length, step: idx, label, mins, at: now };
+    putSession({ ...clone(s), timers: [...s.timers, t] });
+    return { data: { id: t.id, step: idx + 1, mins, label }, sentence: "Started the " + fmtMin(mins) + " min " + label + " timer", undo: [{ type: "session", cook: COOK, session: s }] };
+  },
+  untimer(input) {
+    const { s } = current();
+    let hit;
+    if (input.id != null) hit = s.timers.filter((t) => t.id === input.id);
+    else {
+      let idx = s.step;
+      if (input.step != null) { if (!Number.isInteger(input.step) || input.step < 1) throw new Error("step: must be a whole number from 1"); idx = input.step - 1; }
+      hit = s.timers.filter((t) => t.step === idx);
+    }
+    if (!hit.length) throw new Error("No matching timer is running");
+    putSession({ ...clone(s), timers: s.timers.filter((t) => !hit.includes(t)) });
+    return { data: { stopped: hit.map((t) => t.id) }, sentence: "Stopped the " + hit[0].label + " timer", undo: [{ type: "session", cook: COOK, session: s }] };
+  },
+  log(input) {
+    const { s, tree } = current();
+    if (!tree) throw new Error("No recipe is open to log");
+    const rating = input.rating;
+    if (!Number.isInteger(rating) || rating < 1 || rating > 5) throw new Error("rating: must be a whole number from 1 to 5");
+    if (input.notes != null && typeof input.notes !== "string") throw new Error("notes: must be text");
+    const r = rawAppend({ type: "cook_log", cook: COOK, node: tree.node, rev: tree.rev, rating, note: input.notes || "" });
+    return { data: { id: tree.node, rating }, sentence: "Logged " + rating + (rating === 1 ? " star" : " stars") + " for " + tree.name, undo: [{ type: "retract", seq: r.seq, by: COOK }] };
+  },
+  finish() {
+    const { s, tree } = current();
+    putSession({ ...clone(s), active: false, step: 0, timers: [] });
+    return { tree };
+  },
+};
+function text(o, k) {
+  const v = o[k];
+  if (typeof v !== "string" || !v.trim()) throw new Error(k + (v == null ? ": missing" : ": must be text"));
+  return v.trim();
+}
+
+/* ---- the agent strip ---- */
+const agentOn = () => agent.last && Date.now() - agent.last < AGENT_MS;
+function renderStatus() {
+  $("agent").classList.toggle("on", !!agentOn());
+  $("ag-status").textContent = agentOn() ? "Agent connected" : "No agent connected";
+}
+function renderStrip() {
+  renderStatus();
+  $("ag-lines").innerHTML = agent.lines.map((l) => `<li class="${l.done ? "undone" : ""}" data-line="${l.n}"><span>${esc(l.text)}</span>${l.done ? `<span class="note">Undone</span>` : `<button type="button" class="act" data-undo="${l.n}">Undo</button>`}</li>`).join("");
+  document.documentElement.style.setProperty("--ag-h", $("agent").offsetHeight + 8 + "px");
+}
+function undoLine(n) {
+  const l = agent.lines.find((x) => x.n === n);
+  if (!l || l.done) return;
+  try { for (const e of l.undo) rawAppend(e); l.done = true; ui.msg = ""; }
+  catch (e) { ui.msg = "Could not undo: " + e.message; }
+  render();
+}
+
+/* ---- window.fondue ---- */
+function tool(write, fn) {
+  return (input) => {
+    agent.last = Date.now();
+    try { renderStatus(); } catch (e) {}
+    if (!X) return { ok: false, error: "The engine is still starting" };
+    try {
+      if (input != null && (typeof input !== "object" || Array.isArray(input)) && fn.accepts !== "any") throw new Error("input: must be an object");
+      const res = fn(input == null ? {} : input);
+      if (!write) return { ok: true, ...res };
+      agent.lines.unshift({ n: ++agent.n, text: res.sentence, undo: res.undo, done: false });
+      renderStrip();
+      queueMicrotask(render);
+      return { ok: true, ...res.data };
+    } catch (e) { return { ok: false, error: e.message }; }
+  };
+}
+const loadFn = (i) => acts.load(i); loadFn.accepts = "any";
+window.fondue = {
+  list_recipes: tool(false, () => ({
+    recipes: recipeList().map((c) => { try { const t = treeOf(c.node), st = flatten(t); return { id: c.node, title: c.name, kind: c.kind, serves: t.yields, steps: st.length, about_mins: about(st) }; } catch (e) { return { id: c.node, title: c.name, kind: c.kind }; } }) })),
+  get_sheet: tool(false, (i) => {
+    const node = nodeId(i.id), t = treeOf(node), st = flatten(t);
+    return { id: i.id, node, title: t.name, kind: t.kind, serves: t.yields, rev: t.rev, about_mins: about(st),
+      slots: t.slots.map((s) => ({ id: s.id, role: s.role, qty: s.qty, concept: s.concept, chosen: s.child ? { id: s.child.node, name: s.child.name } : null, dropped: s.dropped })),
+      steps: t.steps.map(stepView), cook_steps: st.map((x) => ({ ...stepView(x), from: x.from })) };
+  }),
+  get_state: tool(false, () => {
+    const { s, tree, steps } = current();
+    return { section: route, recipe: tree ? s.recipe : null, title: tree ? tree.name : null, active: s.active, step: s.active ? s.step + 1 : null, step_index: s.active ? s.step : null,
+      steps_total: steps.length, serve_at: s.serve_at, timers: s.timers.map((t) => ({ id: t.id, step: t.step + 1, label: t.label, mins: t.mins, started_at: t.at })) };
+  }),
+  load_recipe: tool(true, loadFn),
+  choose: tool(true, acts.choose),
+  set_pantry: tool(true, acts.pantry),
+  start_cook: tool(true, acts.start),
+  next_step: tool(true, () => acts.move(1)),
+  prev_step: tool(true, () => acts.move(-1)),
+  start_timer: tool(true, acts.timer),
+  stop_timer: tool(true, acts.untimer),
+  log_cook: tool(true, acts.log),
+};
+
+/* ---- the Cook screen ---- */
+let wake = null, wakeBusy = false, wakeWant = false, wakeFailed = false;
+function syncWake(want) {
+  wakeWant = want;
+  if (!("wakeLock" in navigator)) return;
+  if (!want) { wakeFailed = false; if (wake) { const l = wake; wake = null; try { Promise.resolve(l.release && l.release()).catch(() => {}); } catch (e) {} } return; }
+  if (wake || wakeBusy || wakeFailed) return;
+  wakeBusy = true;
+  Promise.resolve().then(() => navigator.wakeLock.request("screen")).then((l) => {
+    wakeBusy = false;
+    if (!wakeWant) { try { l.release && l.release(); } catch (e) {} return; }
+    wake = l;
+    if (l && l.addEventListener) l.addEventListener("release", () => { if (wake === l) wake = null; });
+  }).catch(() => { wakeBusy = false; wakeFailed = true; });
+}
+document.addEventListener("visibilitychange", () => { if (document.visibilityState === "visible" && wakeWant && !wake) { wakeFailed = false; syncWake(true); } });
+
+function chime() {
+  try {
+    const A = window.AudioContext || window.webkitAudioContext; if (!A) return;
+    ui.audio = ui.audio || new A();
+    [0, 0.35, 0.7].forEach((d) => { const o = ui.audio.createOscillator(), g = ui.audio.createGain(); o.frequency.value = 880; g.gain.value = 0.15; o.connect(g); g.connect(ui.audio.destination); o.start(ui.audio.currentTime + d); o.stop(ui.audio.currentTime + d + 0.2); });
+  } catch (e) {}
+  try { navigator.vibrate && navigator.vibrate([200, 100, 200]); } catch (e) {}
+}
+const clock = (ms) => { const s = Math.max(0, Math.ceil(ms / 1000)); return Math.floor(s / 60) + ":" + String(s % 60).padStart(2, "0"); };
+function tick() {
+  const now = Date.now();
+  for (const t of lastSess.timers) {
+    const left = t.at + t.mins * 60000 - now;
+    if (left <= 0 && !chimed.has(t.id)) { chimed.add(t.id); chime(); renderCook(); return; }
+    document.querySelectorAll(`[data-tleft="${t.id}"]`).forEach((el) => { el.textContent = left > 0 ? clock(left) + " left" : "Time's up"; });
+  }
+  renderStatus();
+}
+
+function timerButton(s, idx, st) {
+  const t = s.timers.find((x) => x.step === idx);
+  if (!t) return `<button type="button" class="ck-timer" data-act="timer">Start ${fmtMin(st.mins)} min timer</button>`;
+  const up = Date.now() >= t.at + t.mins * 60000;
+  return `<button type="button" class="ck-timer ${up ? "up" : "run"}" data-act="untimer" data-id="${esc(t.id)}"><span data-tleft="${esc(t.id)}">${up ? "Time's up" : clock(t.at + t.mins * 60000 - Date.now()) + " left"}</span> · tap to ${up ? "clear" : "stop"}</button>`;
+}
+
+function renderCook() {
+  const { s, tree, steps } = current();
+  lastSess = s;
+  if (s.active && !ui.wasActive) ui.tab = "cook";
+  ui.wasActive = s.active;
+  const tab = ui.tab || (s.active ? "cook" : "recipe");
+  for (const b of $("ck-tabs").children) b.setAttribute("aria-selected", String(b.dataset.tab === tab));
+  const msg = ui.msg ? `<p class="note st-violates" role="alert">${esc(ui.msg)}</p>` : "";
+  let h = "";
+  if (tab === "recipe") {
+    const list = recipeList();
+    h = `<ul class="ck-list">` + list.map((c) => `<li class="pick"><span><b>${esc(c.name)}</b></span><button type="button" class="act${c.node === s.recipe ? " primary" : ""}" data-act="pick" data-id="${esc(c.node)}">Open</button></li>`).join("") + `</ul>`;
+    if (tree) {
+      h = `<div class="ck-step"><div class="ck-verb">${esc(tree.name)}</div>
+        <div class="ck-meta"><span>${tree.yields ? "Serves " + esc(tree.yields) + " · " : ""}${steps.length} steps</span><span>about ${about(steps)} min</span></div>
+        <label class="field"><span class="cap">Serve at (optional)</span><input type="text" id="ck-serve" value="${esc(ui.serve)}" placeholder="6:30 PM" maxlength="40"></label>
+        <button type="button" class="act primary" style="min-height:48px;font-size:16px" data-act="start">${s.active ? "Start over" : "Start cooking"}</button></div>` + h;
+    }
+    h += `<details><summary>Paste a recipe</summary><textarea id="ck-paste" aria-label="Recipe as JSON" placeholder="Recipe JSON">${esc(ui.paste)}</textarea><button type="button" class="act" data-act="paste">Load it</button></details>`;
+  } else if (tab === "ready") {
+    if (!tree) h = `<p class="note">Pick a recipe on the Recipe tab first.</p>`;
+    else h = `<div class="ck-meta"><b>${esc(tree.name)}</b><span>Tick things off as you gather them</span></div><ul class="ck-list">` +
+      leafSlots(tree).map((x, i) => { const k = tree.node + "#" + i; return `<li><span class="q">${esc(x.qty)}</span><label><input type="checkbox" data-ready="${esc(k)}"${ui.ready.has(k) ? " checked" : ""}> <span>${x.name ? esc(x.name) : "<i>pick one</i>"} <span class="note">${esc(x.role)}</span></span></label></li>`; }).join("") + `</ul>`;
+  } else if (ui.finished) {
+    h = `<div class="ck-step"><div class="ck-verb">All done</div><p class="ck-text">How did ${esc(ui.finished.title)} turn out?</p>
+      <div class="ck-rate" role="group" aria-label="Rating">${[1, 2, 3, 4, 5].map((r) => `<button type="button" data-act="rate" data-r="${r}" aria-label="${r} stars">${r} ★</button>`).join("")}</div>
+      <button type="button" class="act" data-act="skiprate">Not now</button></div>`;
+  } else if (!s.active || !steps[s.step]) {
+    h = tree ? `<p class="ck-text">Ready when you are: <b>${esc(tree.name)}</b>, about ${about(steps)} min.</p><button type="button" class="act primary" style="min-height:48px;font-size:16px" data-act="start">Start cooking</button>` : `<p class="note">Pick a recipe on the Recipe tab to start.</p>`;
+  } else {
+    const st = steps[s.step], nx = steps[s.step + 1], last = !nx;
+    h = `<div class="ck-meta"><span>Step ${s.step + 1} of ${steps.length} · ${esc(st.from)}</span><span>about ${about(steps)} min${s.serve_at ? " · serve " + esc(s.serve_at) : ""}</span></div>
+      <div class="ck-bars" aria-hidden="true">${steps.map((_, i) => `<i class="${i < s.step ? "done" : i === s.step ? "now" : ""}"></i>`).join("")}</div>
+      <div class="ck-step">
+        <div class="ck-verb">${esc(plain(st.verb))}${st.attend ? `<span class="attend" style="font-size:16px">▲ Stay close</span>` : `<span class="note" style="font-size:14px">Walk away</span>`}</div>
+        <div class="ck-text">${esc(st.text)}</div>
+        <div class="ck-row">${timerButton(s, s.step, st)}</div>
+        ${st.cue ? `<div class="ck-cue"><span class="cap">Ready when</span> ${esc(st.cue)}</div>` : ""}
+        ${last ? "" : `<div class="ck-next"><span class="cap">Next</span> <b>${esc(plain(nx.verb))}</b></div>`}
+      </div>
+      <div class="ck-nav"><button type="button" class="act" data-act="prev"${s.step === 0 ? " disabled" : ""}>Back</button>
+        ${last ? `<button type="button" class="act primary" data-act="finish">Finish</button>` : `<button type="button" class="act primary" data-act="next">Next step</button>`}</div>` +
+      (s.timers.some((t) => t.step !== s.step) ? `<div class="note">Also running: ${s.timers.filter((t) => t.step !== s.step).map((t) => esc(t.label) + " (step " + (t.step + 1) + ") <span data-tleft=\"" + esc(t.id) + "\"></span>").join(" · ")}</div>` : "");
+  }
+  $("ck-pane").innerHTML = msg + h;
+  for (const t of s.timers) if (Date.now() >= t.at + t.mins * 60000) chimed.add(t.id);
+  syncWake(s.active);
+  renderStrip();
+}
+
+function humanAct(fn) {
+  try { fn(); ui.msg = ""; } catch (e) { ui.msg = e.message; }
+  render();
+}
+function wireCook() {
+  $("ck-tabs").onclick = (ev) => { const b = ev.target.closest("button"); if (b) { ui.tab = b.dataset.tab; ui.msg = ""; renderCook(); } };
+  $("ck-pane").addEventListener("input", (ev) => {
+    if (ev.target.id === "ck-serve") ui.serve = ev.target.value;
+    else if (ev.target.id === "ck-paste") ui.paste = ev.target.value;
+    else if (ev.target.dataset.ready) { const k = ev.target.dataset.ready; ev.target.checked ? ui.ready.add(k) : ui.ready.delete(k); }
+  });
+  $("ck-pane").addEventListener("click", (ev) => {
+    const b = ev.target.closest("button[data-act]"); if (!b) return;
+    const s = lastSess, a = b.dataset.act;
+    if (a === "pick") humanAct(() => putSession({ recipe: b.dataset.id, active: false, step: 0, serve_at: null, timers: [], retired: s.retired }));
+    else if (a === "start") humanAct(() => { acts.start({ id: s.recipe, serve_at: ui.serve.trim() || null }); ui.tab = "cook"; });
+    else if (a === "next") humanAct(() => acts.move(1));
+    else if (a === "prev") humanAct(() => acts.move(-1));
+    else if (a === "timer") humanAct(() => acts.timer({}));
+    else if (a === "untimer") humanAct(() => acts.untimer({ id: b.dataset.id }));
+    else if (a === "finish") humanAct(() => { const r = acts.finish(); ui.finished = r.tree ? { title: r.tree.name } : null; });
+    else if (a === "rate") humanAct(() => { const t = current().tree; if (t) rawAppend({ type: "cook_log", cook: COOK, node: t.node, rev: t.rev, rating: +b.dataset.r, note: "" }); ui.finished = null; });
+    else if (a === "skiprate") humanAct(() => { ui.finished = null; });
+    else if (a === "paste") humanAct(() => { acts.load(ui.paste); ui.paste = ""; });
+  });
+  $("ag-lines").addEventListener("click", (ev) => { const b = ev.target.closest("button[data-undo]"); if (b) undoLine(+b.dataset.undo); });
+  setInterval(tick, 1000);
 }
 
 (async function boot() {
@@ -421,8 +897,8 @@ function wire() {
     let events = JSON.parse(seedJson);
     try { const saved = localStorage.getItem("fondue.log.v2"); if (saved) events = JSON.parse(saved); } catch (e) {}
     try { call({ op: "load", events }); } catch (e) { call({ op: "load", events: JSON.parse(seedJson) }); }
-    wire(); render();
-    $("boot").hidden = true; $("app").hidden = false; $("bottom").hidden = false;
+    wire(); wireCook(); $("agent").hidden = false; render();
+    $("boot").hidden = true; showRoute(); window.addEventListener("hashchange", showRoute);
   } catch (e) {
     $("boot").textContent = "The engine did not start: " + e.message;
   }
