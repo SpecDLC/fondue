@@ -62,6 +62,47 @@ pub enum Event {
     Label { node: NodeId, rev: RevId, label: String, by: String },
     /// Make a revision visible in the public portal.
     Publish { node: NodeId, rev: RevId, by: String },
+    /// Where a cook is in the kitchen right now: the open recipe, the step they
+    /// are on, running timers. Replaces the cook's whole session, so undoing a
+    /// move is appending the earlier session. `Pref` stays for lasting settings.
+    Session { cook: String, session: Session },
+    /// Take back a `CookLog` by its position in the log. The log itself is never
+    /// edited: this event removes the outcome from the projection.
+    Retract { seq: usize, by: String },
+}
+
+/// A cook's moment-to-moment state. Not a kitchen setting.
+#[derive(Clone, Debug, Serialize, Deserialize, PartialEq, Default)]
+#[serde(deny_unknown_fields)]
+pub struct Session {
+    /// The recipe currently open.
+    #[serde(default)]
+    pub recipe: Option<NodeId>,
+    /// A cook is in progress.
+    #[serde(default)]
+    pub active: bool,
+    /// Zero-based position in the flattened step sequence.
+    #[serde(default)]
+    pub step: usize,
+    /// Free text the cook gave ("6:30 PM"). Stored, never computed on.
+    #[serde(default)]
+    pub serve_at: Option<String>,
+    #[serde(default)]
+    pub timers: Vec<Timer>,
+    /// Recipes the cook took back; hidden from the catalog views.
+    #[serde(default)]
+    pub retired: Vec<NodeId>,
+}
+
+#[derive(Clone, Debug, Serialize, Deserialize, PartialEq)]
+#[serde(deny_unknown_fields)]
+pub struct Timer {
+    pub id: String,
+    pub step: usize,
+    pub label: String,
+    pub mins: f64,
+    /// Epoch milliseconds when it started. The caller supplies it: the engine has no clock.
+    pub at: u64,
 }
 
 #[derive(Clone, Debug, Serialize, Deserialize, PartialEq)]
@@ -108,6 +149,7 @@ pub struct State {
     pub logs: Vec<CookLogRec>,
     pub labels: Vec<LabelRec>,
     pub published: BTreeSet<RevId>,
+    pub sessions: BTreeMap<String, Session>,
 }
 
 // ---------- content ids ----------
@@ -284,6 +326,17 @@ impl State {
             Event::CookLog { cook, node, rev, rating, note } => Event::CookLog { rev: self.resolve_rev(&node, &rev)?, cook, node, rating, note },
             Event::Label { node, rev, label, by } => Event::Label { rev: self.resolve_rev(&node, &rev)?, node, label, by },
             Event::Publish { node, rev, by } => Event::Publish { rev: self.resolve_rev(&node, &rev)?, node, by },
+            Event::Session { cook, session } => {
+                if let Some(r) = &session.recipe {
+                    if !self.node_revs.contains_key(r) {
+                        return Err(format!("session names unknown recipe {}", r));
+                    }
+                }
+                if session.timers.iter().any(|t| t.mins < 0.0 || !t.mins.is_finite()) {
+                    return Err("timer mins must be a non-negative number".into());
+                }
+                Event::Session { cook, session }
+            }
             other => other,
         };
 
@@ -379,6 +432,21 @@ impl State {
             Event::Publish { node, rev, .. } => {
                 self.published.insert(rev.clone());
                 format!("publish {}@{}", node, short(rev))
+            }
+            Event::Session { cook, session } => {
+                self.sessions.insert(cook.clone(), session.clone());
+                format!("session {}", cook)
+            }
+            Event::Retract { seq, .. } => {
+                if !matches!(self.log.get(*seq), Some(Event::CookLog { .. })) {
+                    return Err(format!("#{} is not a cook_log", seq));
+                }
+                let before = self.logs.len();
+                self.logs.retain(|l| l.seq != *seq);
+                if self.logs.len() == before {
+                    return Err(format!("cook_log #{} was already taken back", seq));
+                }
+                format!("retract cook_log #{}", seq)
             }
         };
         self.log.push(stored);

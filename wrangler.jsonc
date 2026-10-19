@@ -6,7 +6,7 @@
     "directory": "./dist"
   },
   // Custom domain: the first `wrangler deploy` creates the DNS record and certificate.
-  // The deploy token needs only Workers Scripts Edit (account) + Zone Read (specdlc.com).
+  // The deploy token needs Account Workers Scripts Edit, Zone Workers Routes Edit on specdlc.com, and Zone Read on specdlc.com.
   "routes": [{ "pattern": "fondue.specdlc.com", "custom_domain": true }],
   "workers_dev": false,
   // Worker Previews need a previews block; it can be empty.

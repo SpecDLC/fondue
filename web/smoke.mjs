@@ -37,3 +37,18 @@ for (let i = 0; i < 200; i++) call({ op: "view", root: "g:sunday-dinner", cook: 
 console.log("200 views:", (performance.now() - t0).toFixed(1), "ms");
 const bad = call({ op: "append", event: { type: "cook_log", cook: "x", node: "p:bechamel-nana", rev: "^", rating: 9 } });
 console.log("bad event:", bad.ok, bad.error);
+
+// Loading a recipe from JSON: a good one is applied, a bad one names its field and appends nothing.
+const nEvents = () => call({ op: "events" }).data.length;
+const soup = { id: "smoke-soup", title: "Smoke Soup", serves: "2",
+  slots: [{ id: "fat", role: "fat", concept: "c:cooking-fat", qty: "1 Tbsp", bind: "i:butter-unsalted" }],
+  steps: [{ verb: "SWEAT", text: "Onion in the fat.", mins: 5, attend: false, uses: ["fat"], cue: "soft" }] };
+const before = nEvents();
+const good = call({ op: "import", recipe: soup, cook: "patrick" });
+if (!good.ok || nEvents() <= before) throw new Error("import refused a good recipe: " + good.error);
+const sheet = call({ op: "view", root: "p:smoke-soup", cook: "patrick" }).data.tree;
+if (sheet.steps.length !== 1 || sheet.slots[0].child.node !== "i:butter-unsalted") throw new Error("imported recipe lost a step or slot");
+const after = nEvents();
+const noVerb = call({ op: "import", recipe: { ...soup, id: "smoke-bad", steps: [{ text: "x", mins: 1, attend: false, uses: [], cue: "" }] }, cook: "patrick" });
+if (noVerb.ok || !noVerb.error.includes("steps[0].verb") || nEvents() !== after) throw new Error("bad import was not refused cleanly: " + JSON.stringify(noVerb));
+console.log("import:", good.data.node, "applied;", noVerb.error);
