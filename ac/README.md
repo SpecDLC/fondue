@@ -22,3 +22,4 @@ One falsifiable claim per card:
 | [FONDUE-SITE-2](FONDUE-SITE-2.md) | The engine on the page answers fast enough to feel instant | prototype README | draft |
 | [FONDUE-SITE-3](FONDUE-SITE-3.md) | The page is served at fondue.specdlc.com over HTTPS | release plan | draft, proposed |
 | [FONDUE-SITE-4](FONDUE-SITE-4.md) | The page sets no first-party cookies; the only server-side measurement is disclosed Cloudflare Web Analytics. | release plan | draft, proposed |
+| [FONDUE-SITE-12](FONDUE-SITE-12.md) | Every edit, by hand or by an agent, has one Undo that survives a reload and never overwrites a newer change | QA of the 0.3 release | draft, proposed |

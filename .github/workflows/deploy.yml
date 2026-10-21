@@ -8,7 +8,7 @@
 # CLOUDFLARE_API_TOKEN and CLOUDFLARE_ACCOUNT_ID are SpecDLC organization Actions secrets
 # selected for SpecDLC/fondue, SpecDLC/onemileahead, and SpecDLC/tandem.
 # GitHub does not scope them to an environment. Any job in those repositories can read them.
-# environment: preview adds Patrick (CoeusCC) as a required reviewer on the jobs that set it.
+# environment: preview adds Patrick as a required reviewer on the jobs that set it.
 # environment: production has no required reviewer. Merging to main is the production approval.
 name: Deploy
 
@@ -40,10 +40,10 @@ jobs:
     timeout-minutes: 20
     environment: preview
     steps:
-      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5.1.0
         with: { persist-credentials: false }
       - run: rustup show active-toolchain || rustup toolchain install
-      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+      - uses: actions/setup-node@a0853c24544627f65ddf259abe73b1d18a591444 # v5.0.0
         with: { node-version: 22 }
       - name: Build the page
         run: ./build.sh && cp dist/fondue-demo.html dist/index.html
@@ -72,11 +72,19 @@ jobs:
     runs-on: ubuntu-latest
     environment: preview
     steps:
-      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5.1.0
         with: { persist-credentials: false }
-      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+      - uses: actions/setup-node@a0853c24544627f65ddf259abe73b1d18a591444 # v5.0.0
         with: { node-version: 22 }
-      - run: npx --yes "$WRANGLER" preview delete --name "pr-${{ github.event.pull_request.number }}" --skip-confirmation
+      - name: Delete the Worker Preview (a preview that was never made, or is already gone, is fine)
+        run: |
+          set -uo pipefail
+          out="$(npx --yes "$WRANGLER" preview delete --name "pr-${{ github.event.pull_request.number }}" --skip-confirmation 2>&1)"; rc=$?
+          printf '%s\n' "$out"
+          if [ "$rc" -ne 0 ]; then
+            if printf '%s' "$out" | grep -qE 'Preview not found|code: 10025'; then echo "No preview to delete for this PR."; exit 0; fi
+            exit "$rc"
+          fi
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
@@ -89,10 +97,10 @@ jobs:
     timeout-minutes: 20
     environment: production        # merging to main is already the approval to deploy; do not add a required reviewer
     steps:
-      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5.1.0
         with: { persist-credentials: false }
       - run: rustup show active-toolchain || rustup toolchain install
-      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+      - uses: actions/setup-node@a0853c24544627f65ddf259abe73b1d18a591444 # v5.0.0
         with: { node-version: 22 }
       - name: Build the page
         run: ./build.sh && cp dist/fondue-demo.html dist/index.html
