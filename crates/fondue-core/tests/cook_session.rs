@@ -143,3 +143,16 @@ fn a_cook_log_can_be_taken_back_once_and_the_log_only_grows() {
     let not_a_rating = run(&mut e, json!({"op": "append", "event": {"type": "retract", "seq": 0, "by": "patrick"}}));
     assert_eq!(not_a_rating["ok"], false);
 }
+
+#[test]
+fn a_step_why_is_stored_and_shown() {
+    let mut e = engine();
+    let r = run(&mut e, json!({"op": "import", "recipe": soup(), "cook": "patrick"}));
+    assert_eq!(r["ok"], true, "{}", r);
+    let v = run(&mut e, json!({"op": "view", "root": "p:chicken-noodle-soup", "cook": "patrick"}));
+    let steps = &v["data"]["tree"]["steps"];
+    assert_eq!(steps[0]["why"], "Soft vegetables sweeten the broth.");
+    assert!(steps[1].get("why").map_or(true, |w| w == ""), "a step with no why shows none: {}", steps[1]);
+    let bad = run(&mut e, json!({"op": "import", "recipe": { "id": "x", "title": "X", "serves": "1", "slots": [], "steps": [{"verb": "A", "text": "b", "mins": 1, "attend": false, "uses": [], "why": 3}]}, "cook": "patrick"}));
+    assert_eq!(bad["ok"], false);
+}

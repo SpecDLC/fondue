@@ -32,3 +32,46 @@ print(f"dist/fondue-demo.html  ({len(out)//1024} KB, wasm {len(wasm)//1024} KB)"
 EOF
 # Workers static assets: serve the page as text/html; charset=utf-8 (belt and braces with the meta tag).
 cp web/_headers dist/_headers
+# Unknown paths and /favicon.ico are static files in dist/. wrangler.jsonc serves 404.html as the 404 body.
+python3 - <<'PY'
+import pathlib, struct
+body = """<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Not found · Fondue</title>
+</head>
+<body>
+<p>That page is not on this site.</p>
+<p><a href="/">Back to Fondue</a></p>
+</body>
+</html>
+"""
+pathlib.Path("dist/404.html").write_text(body, encoding="utf-8")
+w = h = 16
+pixels = bytearray()
+for y in range(h):
+    for x in range(w):
+        edge = x in (0, w - 1) or y in (0, h - 1)
+        pixels += bytes((0xF8, 0xFB, 0xFB, 0xFF) if edge else (0x1B, 0x41, 0xC8, 0xFF))
+mask = bytes(h * ((w + 31) // 32) * 4)
+dib = struct.pack("<IiiHHIIiiII", 40, w, h * 2, 1, 32, 0, len(pixels) + len(mask), 0, 0, 0, 0)
+image = dib + bytes(pixels) + mask
+entry = struct.pack("<BBBBHHII", w, h, 0, 0, 1, 32, len(image), 22)
+pathlib.Path("dist/favicon.ico").write_bytes(struct.pack("<HHH", 0, 1, 1) + entry + image)
+print("dist/404.html and dist/favicon.ico")
+PY
+
+# Browser falsifiers for the site criteria (FONDUE-SITE-5 to SITE-11, plus ENG-8's smoke half): Playwright at 390 and 1440 px against the page just built.
+# web/acceptance.mjs is not in release/release.manifest, so the public build has no such file and skips this. Without Playwright the step is skipped loudly.
+# Exit 1 is a refutation and fails the build. Exit 2 (indeterminate or auxiliary) is reported and does not count as a pass.
+if [ -f web/acceptance.mjs ]; then
+  if node -e 'try { require.resolve("playwright") } catch (e) { require.resolve("playwright-core") }' 2>/dev/null; then
+    rc=0; node web/acceptance.mjs || rc=$?
+    if [ "$rc" -eq 1 ]; then echo "acceptance: a falsifier refuted the page" >&2; exit 1; fi
+    if [ "$rc" -ne 0 ]; then echo "acceptance: indeterminate or auxiliary result (exit $rc), NOT a pass" >&2; fi
+  else
+    echo "acceptance: SKIPPED, Playwright is not installed (npm i playwright-core && npx playwright install chromium)" >&2
+  fi
+fi

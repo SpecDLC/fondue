@@ -3,6 +3,8 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
+<!-- WebMCP origin trial: Patrick pastes the registered token into content="". Do not invent one. -->
+<meta http-equiv="origin-trial" content="">
 <title>Fondue Prototype</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700&family=Barlow:wght@400;500;600&family=JetBrains+Mono:wght@500;700&display=swap">
@@ -144,6 +146,9 @@ pre { font-family: var(--mono); font-size: 12px; line-height: 1.55; margin: 0; p
 .ck-rate { display: flex; gap: 6px; flex-wrap: wrap; }
 .ck-rate button { min-width: 48px; min-height: 48px; font: 700 18px var(--mono); border: 1px solid var(--ink); background: var(--panel); color: var(--ink); cursor: pointer; }
 .ck textarea { font: 13px var(--mono); width: 100%; box-sizing: border-box; min-height: 90px; border: 1px solid var(--ink); background: var(--panel); color: var(--ink); padding: 6px; }
+.ck-paste { display: flex; flex-wrap: wrap; gap: 8px 12px; align-items: center; margin: 6px 0; }
+.ck-paste textarea { flex: 1 1 240px; }
+.ck-paste-err { flex: 1 1 200px; margin: 0; }
 .ck details { border-top: 1px solid var(--rule); padding-top: 6px; }
 .ck summary { cursor: pointer; font-weight: 600; min-height: 32px; }
 
@@ -152,6 +157,9 @@ pre { font-family: var(--mono); font-size: 12px; line-height: 1.55; margin: 0; p
 .ag-head { display: flex; align-items: center; gap: 8px; font-weight: 600; font-size: 14px; }
 .ag-dot { width: 10px; height: 10px; border-radius: 50%; border: 2px solid var(--muted); box-sizing: border-box; }
 #agent.on .ag-dot { background: var(--ok); border-color: var(--ok); }
+#ag-confirm:empty { display: none; }
+.ag-ask { display: flex; gap: 8px; align-items: center; justify-content: space-between; flex-wrap: wrap; padding: 6px 8px; border: 2px solid var(--attend); font-size: 14px; font-weight: 600; }
+.ag-ask button { min-height: 36px; padding: 2px 14px; }
 #ag-lines { list-style: none; margin: 0; padding: 0; max-height: 108px; overflow-y: auto; display: flex; flex-direction: column; }
 #ag-lines li { display: flex; gap: 8px; align-items: center; justify-content: space-between; min-height: 36px; border-top: 1px solid var(--soft); font-size: 14px; }
 #ag-lines li span { min-width: 0; overflow-wrap: anywhere; }
@@ -173,6 +181,7 @@ body { padding-bottom: var(--ag-h, 44px); }
       <a href="#engine" data-route="engine">Under the hood</a>
     </nav>
   </header>
+  <p class="note" id="privacy" style="margin:8px 0 0;max-width:75ch">Recipes and choices stay in this browser. The only server-side measurement is Cloudflare Web Analytics, and it is there to improve the product. A review saw the beacon send the page path, referrer, browser and OS, country, and page-load timings. Cloudflare says Web Analytics uses no cookies or localStorage for tracking and does not fingerprint visitors. A visitor who wants no analytics can run <span class="mono">./build.sh</span> and open the self-contained page locally. Cloudflare does not add the beacon there. Fonts still load from the font host unless they are self-hosted.</p>
   <div class="toast" id="toast" role="status"></div>
 
   <div id="boot" class="boot">Loading the WASM engine…</div>
@@ -243,7 +252,7 @@ body { padding-bottom: var(--ag-h, 44px); }
   <div id="sec-engine" hidden>
     <section aria-labelledby="h-hood">
       <h2 id="h-hood">Under the hood</h2>
-      <p class="note" style="margin:0;max-width:75ch">Fondue prototype 0.3 · Rust → WASM · event-sourced. One recipe graph, replayed from an event log inside your browser. Change the canon or the contract dial and watch the sheet, the lockfile and the log respond. Nothing is stored on a server.</p>
+      <p class="note" style="margin:0;max-width:75ch">Fondue prototype 0.3 · Rust → WASM · event-sourced. One recipe graph, replayed from an event log inside your browser. Change the canon or the contract dial and watch the sheet, the lockfile and the log respond. Recipes and choices stay in this browser.</p>
       <div class="stats" aria-live="polite">
         <div><span class="cap">Events</span><b id="s-events">–</b></div>
         <div><span class="cap">Revisions</span><b id="s-revs">–</b></div>
@@ -268,6 +277,7 @@ body { padding-bottom: var(--ag-h, 44px); }
 </div>
 <aside id="agent" hidden aria-label="Agent activity">
   <div class="ag-head"><span class="ag-dot" aria-hidden="true"></span><span id="ag-status" role="status">No agent connected</span></div>
+  <div id="ag-confirm" role="alert"></div>
   <ol id="ag-lines" aria-label="What the agent did"></ol>
 </aside>
 
@@ -480,6 +490,51 @@ function render() {
   }).join("\n");
 }
 
+/* ---- publish and reset: one place each, used by the person's buttons and by the agent's confirmed calls ---- */
+function resetLog() {
+  const was = call({ op: "events" });
+  try { localStorage.removeItem("fondue.log.v2"); } catch (e) {}
+  call({ op: "load", events: JSON.parse(seedJson) }); lastLock = []; unfolded.clear(); agent.lines = []; ui.finished = null; ui.tab = null; render(); toast("Reset to the seed log.");
+  // What the reset took away, as events to add back after the seed (the log always starts with the seed).
+  const seedLen = JSON.parse(seedJson).length;
+  return was.slice(seedLen);
+}
+/* Returns { ok, undo } or { ok: false, error }. `loud` also shows the error on the page. */
+function forkSource() {
+  const sauce = call({ op: "view", root: MAC, cook: COOK }).tree.slots.find((s) => s.id === "sauce");
+  if (sauce?.dropped) return { error: "Your cheese choice left out the béchamel. Switch the cheese back to save your own version." };
+  if (!sauce?.child) return { error: "Pick a béchamel for the mac and cheese first." };
+  return { src: sauce.child };
+}
+function publishFork({ name, ratio, fat }, loud) {
+  const fail = (m) => { if (loud) toast(m, true); return { ok: false, error: m }; };
+  const { src, error } = forkSource();
+  if (error) return fail(error);
+  const rev = call({ op: "get", rev: src.rev });
+  const body = JSON.parse(JSON.stringify(rev.body));
+  body.name = String(name).trim() || "My Béchamel";
+  body.facts.ratio_tbsp_per_cup = ratio;
+  const tbsp = (ratio * 2) + " Tbsp";
+  for (const s of body.slots) { if (s.id === "fat") { s.bind = { node: fat }; s.qty = tbsp; } if (s.id === "starch") s.qty = tbsp; }
+  const node = "p:bechamel-" + COOK;
+  const prevTip = call({ op: "catalog" }).find((c) => c.node === node)?.tips.slice(-1)[0] ?? null;
+  const exists = !!prevTip;
+  const before = sess();
+  const prevChoice = profile().choices[MAC + "/sauce"] ?? null;
+  const c = append({ type: "commit", node, author: COOK, msg: `Fork of ${src.name}: ${ratio} Tbsp/cup`, body,
+    forked_from: { node: src.node, rev: src.rev }, ...(exists ? { parent: "^" } : {}) });
+  if (!c) return { ok: false, error: "Could not save your version" };
+  append({ type: "publish", node, rev: "^", by: COOK });
+  pref({ op: "choose", key: MAC + "/sauce", node });
+  const d = call({ op: "diff", a: src.rev, b: call({ op: "catalog" }).find((x) => x.node === node).tips.slice(-1)[0] });
+  refreshNames(); toast(`Published ${nameOf(node)}. What changed: ${d.join("; ")}`);
+  // The log only grows: Undo puts the pick back, then either points the node at its earlier version or retires a node that was new.
+  const undo = [{ type: "pref", cook: COOK, set: { op: "choose", key: MAC + "/sauce", node: prevChoice } }];
+  if (exists) undo.push({ type: "head", scope: "main", node, rev: prevTip, by: COOK });
+  else undo.push({ type: "session", cook: COOK, session: { ...clone(before), retired: [...new Set([...before.retired, node])] } });
+  return { ok: true, node, title: nameOf(node), changes: d, undo };
+}
+
 function wire() {
   $("canon").onchange = () => pref({ op: "canons", canons: [$("canon").value, ...($("std").checked ? ["public-standards"] : [])] });
   $("std").onchange = $("canon").onchange;
@@ -495,31 +550,8 @@ function wire() {
     else if (b.dataset.use) { pref({ op: "choose", key: MAC + "/sauce", node: b.dataset.use }); toast("Mac and cheese now uses " + nameOf(b.dataset.use)); }
     else if (b.dataset.rate) { if (append({ type: "cook_log", cook: COOK, node: b.dataset.rate, rev: b.dataset.rev, rating: +b.dataset.r, note: "" })) { render(); toast(`Rated ${b.dataset.r}. The order is updated.`); } }
   });
-  $("fork").onsubmit = (ev) => {
-    ev.preventDefault();
-    const mac = call({ op: "view", root: MAC, cook: COOK }).tree;
-    const sauce = mac.slots.find((s) => s.id === "sauce");
-    if (sauce?.dropped) { toast("Your cheese choice left out the béchamel. Switch the cheese back to save your own version.", true); return; }
-    const src = sauce?.child;
-    if (!src) { toast("Pick a béchamel for the mac and cheese first.", true); return; }
-    const rev = call({ op: "get", rev: src.rev });
-    const body = JSON.parse(JSON.stringify(rev.body));
-    const ratio = +$("f-ratio").value;
-    body.name = $("f-name").value.trim() || "My Béchamel";
-    body.facts.ratio_tbsp_per_cup = ratio;
-    const tbsp = (ratio * 2) + " Tbsp";
-    for (const s of body.slots) { if (s.id === "fat") { s.bind = { node: $("f-fat").value }; s.qty = tbsp; } if (s.id === "starch") s.qty = tbsp; }
-    const node = "p:bechamel-" + COOK;
-    const exists = call({ op: "catalog" }).some((c) => c.node === node);
-    const ok = append({ type: "commit", node, author: COOK, msg: `Fork of ${src.name}: ${ratio} Tbsp/cup`, body,
-      forked_from: { node: src.node, rev: src.rev }, ...(exists ? { parent: "^" } : {}) });
-    if (!ok) return;
-    append({ type: "publish", node, rev: "^", by: COOK });
-    pref({ op: "choose", key: MAC + "/sauce", node });
-    const d = call({ op: "diff", a: src.rev, b: call({ op: "catalog" }).find((c) => c.node === node).tips.slice(-1)[0] });
-    refreshNames(); toast(`Published ${nameOf(node)}. What changed: ${d.join("; ")}`);
-  };
-  $("reset").onclick = () => { try { localStorage.removeItem("fondue.log.v2"); } catch (e) {} call({ op: "load", events: JSON.parse(seedJson) }); lastLock = []; unfolded.clear(); agent.lines = []; ui.finished = null; ui.tab = null; render(); toast("Reset to the seed log."); };
+  $("fork").onsubmit = (ev) => { ev.preventDefault(); publishFork({ name: $("f-name").value, ratio: +$("f-ratio").value, fat: $("f-fat").value }, true); };
+  $("reset").onclick = () => resetLog();
 }
 
 /* ===== cook: session in the log, the agent strip, and window.fondue ===== */
@@ -538,8 +570,45 @@ const PLAIN = { SWEAT: "SOFTEN", MONTER: "STIR IN", DEGLAZE: "SCRAPE THE PAN" };
 const plain = (v) => PLAIN[String(v).toUpperCase()] || String(v).toUpperCase();
 const clone = (o) => JSON.parse(JSON.stringify(o));
 const fmtMin = (m) => String(Math.round(m * 10) / 10);
-const ui = { tab: null, finished: null, msg: "", serve: "", paste: "", ready: new Set(), wasActive: false };
+/* Under a minute the button says seconds. The timer still runs for that fraction of a minute. */
+function timerStartLabel(mins) {
+  if (typeof mins === "number" && mins > 0 && mins < 1) return "Start " + Math.round(mins * 60) + " sec timer";
+  return "Start " + fmtMin(mins) + " min timer";
+}
+/* A person-count ("4", "4–6") is Serves. A measured yield ("2 cups") is Makes. */
+function yieldLine(yields) {
+  const y = String(yields || "").trim();
+  if (!y) return "";
+  return (/^\d+(?:\s*[–-]\s*\d+)?$/.test(y) ? "Serves " : "Makes ") + y;
+}
+/* The page names the bound ingredient. "Butter, unsalted" is Butter; olive oil stays olive oil. */
+function kitchenIngredient(child) {
+  if (!child) return "";
+  const impl = child.implements || [];
+  const name = String(child.name || "");
+  if (impl.includes("c:olive-oil") || /olive oil/i.test(name)) return "Olive oil";
+  if (/^butter\b/i.test(name)) return "Butter";
+  const cut = name.split(",")[0].trim();
+  return cut || name;
+}
+/* "Fat into the saucepan" uses the slot id as a stand-in. A role with more words ("fat for roux") is that stand-in. */
+function cookText(st) {
+  let text = String(st.text || "");
+  for (const id of st.uses || []) {
+    const slot = (st._slots || []).find((s) => s.id === id && !s.dropped && s.child);
+    if (!slot) continue;
+    const roleWords = String(slot.role || "").trim().split(/\s+/);
+    if (roleWords.length < 2 || roleWords[0].toLowerCase() !== String(id).toLowerCase()) continue;
+    const label = kitchenIngredient(slot.child);
+    if (!label) continue;
+    const re = new RegExp("^" + String(id).replace(/[.*+?^${}()|[\]\\]/g, "\\$&") + "\\b", "i");
+    if (re.test(text)) text = text.replace(re, label);
+  }
+  return text;
+}
+const ui = { tab: null, finished: null, msg: "", serve: "", paste: "", pasteErr: "", ready: new Set(), wasActive: false };
 const agent = { last: 0, lines: [], n: 0 };
+const pending = [];   /* consequential calls from an agent, waiting for a person to click */
 let lastSess = { timers: [] }, chimed = new Set();
 
 function rawAppend(event) { const r = call({ op: "append", event }); save(); return r; }
@@ -562,7 +631,7 @@ function treeOf(node) {
 /* The step sequence: each building block's steps come before the dish that uses it. */
 function flatten(n, out = []) {
   for (const s of n.slots) if (!s.dropped && s.child && s.child.kind === "preparation") flatten(s.child, out);
-  for (const st of n.steps) out.push({ ...st, from: n.name });
+  for (const st of n.steps) out.push({ ...st, from: n.name, _slots: n.slots });
   return out;
 }
 function leafSlots(n, out = []) {
@@ -580,7 +649,7 @@ function current() {
   try { const tree = treeOf(s.recipe); return { s, tree, steps: flatten(tree) }; }
   catch (e) { return { s, tree: null, steps: [] }; }
 }
-const stepView = (st) => ({ verb: st.verb, text: st.text, mins: st.mins, attend: st.attend, cue: st.cue, uses: st.uses });
+const stepView = (st) => ({ verb: st.verb, text: st.text, mins: st.mins, attend: st.attend, cue: st.cue, why: st.why || "", uses: st.uses });
 
 /* Each act appends events and returns { data, sentence, undo }. `undo` is the list of events that put things back. */
 const acts = {
@@ -712,7 +781,8 @@ function renderStatus() {
 }
 function renderStrip() {
   renderStatus();
-  $("ag-lines").innerHTML = agent.lines.map((l) => `<li class="${l.done ? "undone" : ""}" data-line="${l.n}"><span>${esc(l.text)}</span>${l.done ? `<span class="note">Undone</span>` : `<button type="button" class="act" data-undo="${l.n}">Undo</button>`}</li>`).join("");
+  $("ag-lines").innerHTML = agent.lines.map((l) => `<li class="${l.done ? "undone" : ""}" data-line="${l.n}"><span>${esc(l.text)}</span>${l.done ? `<span class="note">Undone</span>` : !l.undo.length ? `<span class="note">Can't be undone</span>` : `<button type="button" class="act" data-undo="${l.n}">Undo</button>`}</li>`).join("");
+  $("ag-confirm").innerHTML = pending.map((q) => `<div class="ag-ask"><span>${esc(q.text)}</span><span><button type="button" class="act primary" data-confirm="${q.n}">${esc(q.label)}</button> <button type="button" class="act" data-dismiss="${q.n}">Not now</button></span></div>`).join("");
   document.documentElement.style.setProperty("--ag-h", $("agent").offsetHeight + 8 + "px");
 }
 function undoLine(n) {
@@ -741,30 +811,102 @@ function tool(write, fn) {
   };
 }
 const loadFn = (i) => acts.load(i); loadFn.accepts = "any";
-window.fondue = {
-  list_recipes: tool(false, () => ({
-    recipes: recipeList().map((c) => { try { const t = treeOf(c.node), st = flatten(t); return { id: c.node, title: c.name, kind: c.kind, serves: t.yields, steps: st.length, about_mins: about(st) }; } catch (e) { return { id: c.node, title: c.name, kind: c.kind }; } }) })),
-  get_sheet: tool(false, (i) => {
+
+/* A consequential call from an agent does nothing but ask. Only a real click on the confirm control runs it. */
+function askPerson(kind, text, label, run) {
+  const i = pending.findIndex((q) => q.kind === kind);
+  if (i >= 0) pending.splice(i, 1);
+  pending.push({ n: ++agent.n, kind, text, label, run });
+  renderStrip();
+  return { status: "needs_confirmation" };
+}
+function confirmPending(n, trusted) {
+  const i = pending.findIndex((q) => q.n === n);
+  if (i < 0) return;
+  const q = pending[i];
+  if (q.dismiss || !trusted) { if (q.dismiss) pending.splice(i, 1); renderStrip(); return; }
+  pending.splice(i, 1);
+  try { const r = q.run(); agent.lines.unshift({ n: ++agent.n, text: r.sentence, undo: r.undo, done: false }); ui.msg = ""; }
+  catch (e) { ui.msg = "Could not finish: " + e.message; }
+  render();
+}
+const fatChoices = () => [...$("f-fat").options].map((o) => o.value);
+const forkTool = (input) => {
+  const name = text(input, "name");
+  if (name.length > 60) throw new Error("name: must be at most 60 characters");
+  const ch = input.changes ?? {};
+  if (typeof ch !== "object" || Array.isArray(ch)) throw new Error("changes: must be an object");
+  const { src, error } = forkSource();
+  if (error) throw new Error(error);
+  const ratio = ch.ratio_tbsp_per_cup ?? call({ op: "get", rev: src.rev }).body.facts.ratio_tbsp_per_cup;
+  if (typeof ratio !== "number" || !(ratio >= 0.5 && ratio <= 6)) throw new Error("changes.ratio_tbsp_per_cup: must be a number from 0.5 to 6");
+  const fat = ch.fat ?? call({ op: "get", rev: src.rev }).body.slots.find((s) => s.id === "fat")?.bind?.node ?? fatChoices()[0];
+  if (!fatChoices().includes(fat)) throw new Error("changes.fat: must be one of " + fatChoices().join(", "));
+  return askPerson("publish", `An agent wants to share your version "${name}" (${ratio} Tbsp per cup).`, "Share it", () => {
+    const r = publishFork({ name, ratio, fat }, false);
+    if (!r.ok) throw new Error(r.error);
+    return { sentence: "Shared " + r.title, undo: r.undo };
+  });
+};
+const resetTool = () => askPerson("reset", "An agent wants to put everything back the way it started and clear your history.", "Put it back", () => ({ sentence: "Put everything back to the start", undo: resetLog() }));
+function rawTool(fn) {
+  return (input) => {
+    agent.last = Date.now();
+    try { renderStatus(); } catch (e) {}
+    if (!X) return { ok: false, error: "The engine is still starting" };
+    try {
+      if (input != null && (typeof input !== "object" || Array.isArray(input))) throw new Error("input: must be an object");
+      return fn(input == null ? {} : input);
+    } catch (e) { return { ok: false, error: e.message }; }
+  };
+}
+
+/* One table drives both doors: window.fondue and WebMCP. */
+const NONE = { type: "object", properties: {}, additionalProperties: false };
+const RO = { readOnlyHint: true }, CONSEQ = { consequentialHint: true };
+const FONDUE_TOOLS = [
+  ["list_recipes", "List the recipes that are open to cook.", NONE, RO, tool(false, () => ({
+    recipes: recipeList().map((c) => { try { const t = treeOf(c.node), st = flatten(t); return { id: c.node, title: c.name, kind: c.kind, serves: t.yields, steps: st.length, about_mins: about(st) }; } catch (e) { return { id: c.node, title: c.name, kind: c.kind }; } }) }))],
+  ["get_sheet", "Get one recipe as a sheet: its ingredient lines and steps.", { type: "object", properties: { id: { type: "string", description: "Recipe id, from list_recipes." } }, required: ["id"], additionalProperties: false }, RO, tool(false, (i) => {
     const node = nodeId(i.id), t = treeOf(node), st = flatten(t);
     return { id: i.id, node, title: t.name, kind: t.kind, serves: t.yields, rev: t.rev, about_mins: about(st),
       slots: t.slots.map((s) => ({ id: s.id, role: s.role, qty: s.qty, concept: s.concept, chosen: s.child ? { id: s.child.node, name: s.child.name } : null, dropped: s.dropped })),
       steps: t.steps.map(stepView), cook_steps: st.map((x) => ({ ...stepView(x), from: x.from })) };
-  }),
-  get_state: tool(false, () => {
+  })],
+  ["get_state", "Get where the cook is: section, recipe, step and running timers.", NONE, RO, tool(false, () => {
     const { s, tree, steps } = current();
     return { section: route, recipe: tree ? s.recipe : null, title: tree ? tree.name : null, active: s.active, step: s.active ? s.step + 1 : null, step_index: s.active ? s.step : null,
       steps_total: steps.length, serve_at: s.serve_at, timers: s.timers.map((t) => ({ id: t.id, step: t.step + 1, label: t.label, mins: t.mins, started_at: t.at })) };
-  }),
-  load_recipe: tool(true, loadFn),
-  choose: tool(true, acts.choose),
-  set_pantry: tool(true, acts.pantry),
-  start_cook: tool(true, acts.start),
-  next_step: tool(true, () => acts.move(1)),
-  prev_step: tool(true, () => acts.move(-1)),
-  start_timer: tool(true, acts.timer),
-  stop_timer: tool(true, acts.untimer),
-  log_cook: tool(true, acts.log),
-};
+  })],
+  ["load_recipe", "Add a recipe from JSON and open it. The input is the recipe itself.", { type: "object", properties: {
+      id: { type: "string" }, title: { type: "string" }, serves: { type: "string" },
+      slots: { type: "array", items: { type: "object", properties: { id: { type: "string" }, role: { type: "string" }, concept: { type: "string" }, qty: { type: "string" }, bind: { type: "string" } }, required: ["id", "role", "concept", "qty"] } },
+      steps: { type: "array", items: { type: "object", properties: { verb: { type: "string" }, text: { type: "string" }, mins: { type: "number" }, attend: { type: "boolean" }, uses: { type: "array", items: { type: "string" } }, cue: { type: "string" }, why: { type: "string" } }, required: ["verb", "text", "mins", "attend", "uses"] } } },
+    required: ["id", "title", "slots", "steps"] }, {}, tool(true, loadFn)],
+  ["choose", "Pick an option for an ingredient line.", { type: "object", properties: { slot: { type: "string" }, option: { type: "string" } }, required: ["slot", "option"], additionalProperties: false }, {}, tool(true, acts.choose)],
+  ["set_pantry", "Say which item the cook keeps in the pantry for a kind of ingredient. Pass null to clear.", { type: "object", properties: { concept: { type: "string" }, item: { type: ["string", "null"] } }, required: ["concept"], additionalProperties: false }, {}, tool(true, acts.pantry)],
+  ["start_cook", "Open the Cook screen at step 1.", { type: "object", properties: { id: { type: "string" }, serve_at: { type: "string", description: "Optional, such as \"6:30 PM\"." } }, required: ["id"], additionalProperties: false }, {}, tool(true, acts.start)],
+  ["next_step", "Move to the next step.", NONE, {}, tool(true, () => acts.move(1))],
+  ["prev_step", "Go back one step.", NONE, {}, tool(true, () => acts.move(-1))],
+  ["start_timer", "Start a timer for a step.", { type: "object", properties: { step: { type: "integer", minimum: 1 }, mins: { type: "number", exclusiveMinimum: 0, maximum: 1440 }, label: { type: "string" } }, additionalProperties: false }, {}, tool(true, acts.timer)],
+  ["stop_timer", "Stop a timer.", { type: "object", properties: { id: { type: "string" }, step: { type: "integer", minimum: 1 } }, additionalProperties: false }, {}, tool(true, acts.untimer)],
+  ["log_cook", "Rate the dish that was cooked.", { type: "object", properties: { rating: { type: "integer", minimum: 1, maximum: 5 }, notes: { type: "string" } }, required: ["rating"], additionalProperties: false }, {}, tool(true, acts.log)],
+  ["publish_fork", "Save your own version of the béchamel and publish it. A person must confirm on the page first; this returns needs_confirmation.", { type: "object", properties: { name: { type: "string" }, changes: { type: "object", properties: { ratio_tbsp_per_cup: { type: "number", minimum: 0.5, maximum: 6 }, fat: { type: "string" } }, additionalProperties: false } }, required: ["name"], additionalProperties: false }, CONSEQ, rawTool(forkTool)],
+  ["reset_log", "Put everything back to the starting log. A person must confirm on the page first; this returns needs_confirmation.", NONE, CONSEQ, rawTool(resetTool)],
+];
+window.fondue = Object.fromEntries(FONDUE_TOOLS.map(([name, , , , fn]) => [name, fn]));
+
+/* WebMCP: document.modelContext, else navigator.modelContext, else nothing. Never throws. */
+(function registerWebMCP() {
+  try {
+    const mc = (document.modelContext && typeof document.modelContext.registerTool === "function") ? document.modelContext
+      : (navigator.modelContext && typeof navigator.modelContext.registerTool === "function") ? navigator.modelContext : null;
+    if (!mc) return;
+    for (const [name, description, inputSchema, annotations, fn] of FONDUE_TOOLS) {
+      try { mc.registerTool({ name, description, inputSchema, annotations: { ...annotations }, execute: async (input) => fn(input) }); } catch (e) {}
+    }
+  } catch (e) {}
+})();
 
 /* ---- the Cook screen ---- */
 let wake = null, wakeBusy = false, wakeWant = false, wakeFailed = false;
@@ -804,7 +946,7 @@ function tick() {
 
 function timerButton(s, idx, st) {
   const t = s.timers.find((x) => x.step === idx);
-  if (!t) return `<button type="button" class="ck-timer" data-act="timer">Start ${fmtMin(st.mins)} min timer</button>`;
+  if (!t) return `<button type="button" class="ck-timer" data-act="timer">${esc(timerStartLabel(st.mins))}</button>`;
   const up = Date.now() >= t.at + t.mins * 60000;
   return `<button type="button" class="ck-timer ${up ? "up" : "run"}" data-act="untimer" data-id="${esc(t.id)}"><span data-tleft="${esc(t.id)}">${up ? "Time's up" : clock(t.at + t.mins * 60000 - Date.now()) + " left"}</span> · tap to ${up ? "clear" : "stop"}</button>`;
 }
@@ -823,11 +965,11 @@ function renderCook() {
     h = `<ul class="ck-list">` + list.map((c) => `<li class="pick"><span><b>${esc(c.name)}</b></span><button type="button" class="act${c.node === s.recipe ? " primary" : ""}" data-act="pick" data-id="${esc(c.node)}">Open</button></li>`).join("") + `</ul>`;
     if (tree) {
       h = `<div class="ck-step"><div class="ck-verb">${esc(tree.name)}</div>
-        <div class="ck-meta"><span>${tree.yields ? "Serves " + esc(tree.yields) + " · " : ""}${steps.length} steps</span><span>about ${about(steps)} min</span></div>
+        <div class="ck-meta"><span>${tree.yields ? esc(yieldLine(tree.yields)) + " · " : ""}${steps.length} steps</span><span>about ${about(steps)} min</span></div>
         <label class="field"><span class="cap">Serve at (optional)</span><input type="text" id="ck-serve" value="${esc(ui.serve)}" placeholder="6:30 PM" maxlength="40"></label>
         <button type="button" class="act primary" style="min-height:48px;font-size:16px" data-act="start">${s.active ? "Start over" : "Start cooking"}</button></div>` + h;
     }
-    h += `<details><summary>Paste a recipe</summary><textarea id="ck-paste" aria-label="Recipe as JSON" placeholder="Recipe JSON">${esc(ui.paste)}</textarea><button type="button" class="act" data-act="paste">Load it</button></details>`;
+    h += `<details${ui.pasteErr ? " open" : ""}><summary>Paste a recipe</summary><div class="ck-paste"><textarea id="ck-paste" aria-label="Recipe as JSON" placeholder="Recipe JSON"${ui.pasteErr ? ' aria-invalid="true" aria-describedby="ck-paste-err"' : ""}>${esc(ui.paste)}</textarea>${ui.pasteErr ? `<p id="ck-paste-err" class="note st-violates ck-paste-err" role="alert">${esc(ui.pasteErr)}</p>` : ""}</div><button type="button" class="act" data-act="paste">Load it</button></details>`;
   } else if (tab === "ready") {
     if (!tree) h = `<p class="note">Pick a recipe on the Recipe tab first.</p>`;
     else h = `<div class="ck-meta"><b>${esc(tree.name)}</b><span>Tick things off as you gather them</span></div><ul class="ck-list">` +
@@ -844,9 +986,10 @@ function renderCook() {
       <div class="ck-bars" aria-hidden="true">${steps.map((_, i) => `<i class="${i < s.step ? "done" : i === s.step ? "now" : ""}"></i>`).join("")}</div>
       <div class="ck-step">
         <div class="ck-verb">${esc(plain(st.verb))}${st.attend ? `<span class="attend" style="font-size:16px">▲ Stay close</span>` : `<span class="note" style="font-size:14px">Walk away</span>`}</div>
-        <div class="ck-text">${esc(st.text)}</div>
+        <div class="ck-text">${esc(cookText(st))}</div>
         <div class="ck-row">${timerButton(s, s.step, st)}</div>
         ${st.cue ? `<div class="ck-cue"><span class="cap">Ready when</span> ${esc(st.cue)}</div>` : ""}
+        ${st.why ? `<div class="ck-cue"><span class="cap">Why</span> ${esc(st.why)}</div>` : ""}
         ${last ? "" : `<div class="ck-next"><span class="cap">Next</span> <b>${esc(plain(nx.verb))}</b></div>`}
       </div>
       <div class="ck-nav"><button type="button" class="act" data-act="prev"${s.step === 0 ? " disabled" : ""}>Back</button>
@@ -882,7 +1025,32 @@ function wireCook() {
     else if (a === "finish") humanAct(() => { const r = acts.finish(); ui.finished = r.tree ? { title: r.tree.name } : null; });
     else if (a === "rate") humanAct(() => { const t = current().tree; if (t) rawAppend({ type: "cook_log", cook: COOK, node: t.node, rev: t.rev, rating: +b.dataset.r, note: "" }); ui.finished = null; });
     else if (a === "skiprate") humanAct(() => { ui.finished = null; });
-    else if (a === "paste") humanAct(() => { acts.load(ui.paste); ui.paste = ""; });
+    else if (a === "paste") {
+      ui.msg = "";
+      const raw = ui.paste;
+      if (!String(raw).trim()) ui.pasteErr = "The box is empty. Paste a recipe, then load it.";
+      else {
+        let recipe;
+        try { recipe = JSON.parse(raw); }
+        catch (e) { recipe = undefined; }
+        if (recipe === undefined) ui.pasteErr = "That is not a recipe I can read. Check the text and try again.";
+        else {
+          try { acts.load(recipe); ui.paste = ""; ui.pasteErr = ""; }
+          catch (e) {
+            const m = String(e.message || "");
+            ui.pasteErr = /not valid JSON|Unexpected |in JSON at position|Expected property/i.test(m)
+              ? "That is not a recipe I can read. Check the text and try again."
+              : m;
+          }
+        }
+      }
+      render();
+    }
+  });
+  $("ag-confirm").addEventListener("click", (ev) => {
+    const c = ev.target.closest("button[data-confirm]"), d = ev.target.closest("button[data-dismiss]");
+    if (c) confirmPending(+c.dataset.confirm, ev.isTrusted);   /* a click made by script is not a person */
+    else if (d) { const q = pending.find((x) => x.n === +d.dataset.dismiss); if (q) q.dismiss = true; confirmPending(+d.dataset.dismiss, true); }
   });
   $("ag-lines").addEventListener("click", (ev) => { const b = ev.target.closest("button[data-undo]"); if (b) undoLine(+b.dataset.undo); });
   setInterval(tick, 1000);
