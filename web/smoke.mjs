@@ -34,7 +34,19 @@ const pt = call({ op: "portal", concept: "c:bechamel", cook: "patrick" });
 console.log("portal:", pt.data.map(e => `${e.name} [${e.check.status}] ★${e.outcome_avg.toFixed(1)}×${e.outcome_n}`).join(" | "));
 const t0 = performance.now();
 for (let i = 0; i < 200; i++) call({ op: "view", root: "g:sunday-dinner", cook: "patrick" });
-console.log("200 views:", (performance.now() - t0).toFixed(1), "ms");
+const viewMs = performance.now() - t0;
+console.log("200 views:", viewMs.toFixed(1), "ms");
+// FONDUE-SITE-2: the timing is visible without opening the job log, and a slow engine fails the run.
+const VIEW_LIMIT_MS = 1000;
+if (process.env.GITHUB_STEP_SUMMARY) {
+  const { appendFileSync } = await import("node:fs");
+  appendFileSync(process.env.GITHUB_STEP_SUMMARY,
+    `### FONDUE-SITE-2\n\n200 views: ${viewMs.toFixed(1)} ms (limit ${VIEW_LIMIT_MS} ms): ${viewMs < VIEW_LIMIT_MS ? "pass" : "FAIL"}\n`);
+}
+if (!(viewMs < VIEW_LIMIT_MS)) {
+  console.error(`FONDUE-SITE-2 failed: 200 views took ${viewMs.toFixed(1)} ms, limit is under ${VIEW_LIMIT_MS} ms`);
+  process.exit(1);
+}
 const bad = call({ op: "append", event: { type: "cook_log", cook: "x", node: "p:bechamel-nana", rev: "^", rating: 9 } });
 console.log("bad event:", bad.ok, bad.error);
 

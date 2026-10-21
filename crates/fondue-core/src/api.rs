@@ -31,6 +31,16 @@ enum Cmd {
     Session { cook: String },
     Profile { cook: String },
     Canons {},
+    /// Every recorded edit, oldest first, with whether its Undo can run now.
+    Edits {},
+    /// A content id for a seed log, stored next to the saved log so a newer seed can be noticed.
+    SeedId { events: Value },
+    /// Load `seed`, then replay the visitor's own `pref`, `cook_log`, `session`, `edit` and `undo`
+    /// events from `saved` (everything after its first `saved_seed_len` events).
+    /// A cook_log that was taken back is dropped with its retract. An event that
+    /// no longer fits the new seed is skipped and counted, never fatal. An `undo` is
+    /// renumbered to its edit's new position, and skipped if that edit was not replayed.
+    Rebase { seed: Vec<Event>, saved: Vec<Event>, #[serde(default)] saved_seed_len: Option<usize> },
 }
 
 #[derive(Default)]
@@ -101,6 +111,63 @@ impl Engine {
             Cmd::Session { cook } => Ok(serde_json::to_value(self.state.sessions.get(&cook).cloned().unwrap_or_default()).unwrap()),
             Cmd::Events {} => Ok(serde_json::to_value(&self.state.log).unwrap()),
             Cmd::Profile { cook } => Ok(serde_json::to_value(self.profile(&cook, None)).unwrap()),
+            Cmd::Edits {} => {
+                let st = &self.state;
+                let out: Vec<Value> = st.log.iter().enumerate().filter_map(|(seq, ev)| match ev {
+                    Event::Edit { by, text, undo, .. } => {
+                        let check = st.check_undo(seq);
+                        let undone = st.undone.contains(&seq);
+                        Some(json!({ "seq": seq, "by": by, "text": text, "can_undo": !undo.is_empty(), "undone": undone,
+                                     "stale": !undo.is_empty() && !undone && check.is_err(), "reason": check.err() }))
+                    }
+                    _ => None,
+                }).collect();
+                Ok(json!(out))
+            }
+            Cmd::SeedId { events } => Ok(json!(crate::state::digest(&events))),
+            Cmd::Rebase { seed, saved, saved_seed_len } => {
+                let old_len = match saved_seed_len {
+                    Some(n) if n <= saved.len() => n,
+                    Some(n) => return Err(format!("saved log is shorter than its seed ({} < {})", saved.len(), n)),
+                    // A log saved before seeds had ids: treat it as seeded if it starts with the same kinds of events.
+                    None => {
+                        let n = seed.len();
+                        let same = saved.len() >= n && saved[..n].iter().zip(seed.iter()).all(|(a, b)| std::mem::discriminant(a) == std::mem::discriminant(b));
+                        if !same {
+                            return Err("saved log does not start with a seed".into());
+                        }
+                        n
+                    }
+                };
+                let taken_back: BTreeSet<usize> = saved[old_len..].iter().filter_map(|e| match e { Event::Retract { seq, .. } => Some(*seq), _ => None }).collect();
+                let mut st = State::from_events(seed)?;
+                let (mut replayed, mut skipped) = (0, 0);
+                // Old log position -> new log position, so an Undo still names its own Edit record.
+                let mut moved: std::collections::BTreeMap<usize, usize> = std::collections::BTreeMap::new();
+                for (i, ev) in saved.into_iter().enumerate().skip(old_len) {
+                    let ev = match ev {
+                        Event::Pref { .. } | Event::Session { .. } | Event::Edit { .. } => ev,
+                        Event::CookLog { .. } if !taken_back.contains(&i) => ev,
+                        Event::Undo { undoes, by } => match moved.get(&undoes) {
+                            Some(&n) => Event::Undo { undoes: n, by },
+                            // Its edit was not replayed: nothing to undo here.
+                            None => { skipped += 1; continue; }
+                        },
+                        _ => continue,
+                    };
+                    let mut next = st.clone();
+                    let at = next.log.len();
+                    if next.apply(ev).is_ok() {
+                        moved.insert(i, at);
+                        st = next;
+                        replayed += 1;
+                    } else {
+                        skipped += 1;
+                    }
+                }
+                self.state = st;
+                Ok(json!({ "replayed": replayed, "skipped": skipped, "events": self.state.log.len() }))
+            }
             Cmd::Canons {} => Ok(serde_json::to_value(&self.state.canons).unwrap()),
         }
     }
