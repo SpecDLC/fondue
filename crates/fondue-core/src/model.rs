@@ -149,6 +149,10 @@ pub struct Step {
     pub uses: Vec<String>,
     #[serde(default)]
     pub cue: String,
+    /// Why this step is done. Empty by default, and an empty string is pruned from
+    /// the canonical form, so steps without it keep their content ids.
+    #[serde(default)]
+    pub why: String,
 }
 
 /// A recipe-local delta triggered by what a slot is bound to.

@@ -6,7 +6,7 @@
 
 Butter is an ingredient, béchamel is a component, mac and cheese is a dish, Sunday dinner is a meal. In Fondue they are all the same kind of node, and the zoom level comes from how they nest. Recipes are data, and every view (a printed sheet, a live step on a tablet, a lockfile) is a projection of that data.
 
-This is **prototype 0.2**: a Rust engine compiled to WebAssembly, and a single-page demo that resolves a whole dinner in about 0.6 ms in the browser. It exists to prove the load-bearing ideas, not to be feature-rich.
+This is **prototype 0.3**: a Rust engine compiled to WebAssembly, and a single-page demo that resolves a whole dinner in about 0.6 ms in the browser. It exists to prove the load-bearing ideas, not to be feature-rich.
 
 ## What it does
 

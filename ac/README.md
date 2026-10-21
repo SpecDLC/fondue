@@ -21,4 +21,4 @@ One falsifiable claim per card:
 | [FONDUE-SITE-1](FONDUE-SITE-1.md) | The demo page is one self-contained file built from source | build script | draft |
 | [FONDUE-SITE-2](FONDUE-SITE-2.md) | The engine on the page answers fast enough to feel instant | prototype README | draft |
 | [FONDUE-SITE-3](FONDUE-SITE-3.md) | The page is served at fondue.specdlc.com over HTTPS | release plan | draft, proposed |
-| [FONDUE-SITE-4](FONDUE-SITE-4.md) | The page sets no cookies and sends nothing about the visitor | release plan | draft, proposed |
+| [FONDUE-SITE-4](FONDUE-SITE-4.md) | The page sets no first-party cookies; the only server-side measurement is disclosed Cloudflare Web Analytics. | release plan | draft, proposed |

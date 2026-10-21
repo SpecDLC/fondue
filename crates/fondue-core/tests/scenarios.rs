@@ -84,6 +84,31 @@ fn content_ids_are_golden() {
 const GOLDEN: &str = include_str!("golden_id.txt");
 
 #[test]
+fn step_why_leaves_old_ids_alone() {
+    // A step that does not set `why` has the same canonical JSON, hence the same id, as before the field existed.
+    let step = json!({"verb": "WHISK", "text": "Whisk.", "mins": 1.0, "attend": true, "uses": [], "cue": "smooth"});
+    let mk = |step: serde_json::Value| -> String {
+        let body: Body = serde_json::from_value(json!({"kind": "preparation", "name": "T", "slots": [], "steps": [step]})).unwrap();
+        content_id("p:t", &None, "t", "", &body, &None)
+    };
+    let plain = mk(step.clone());
+    let mut empty = step.clone();
+    empty["why"] = json!("");
+    assert_eq!(mk(empty), plain, "an empty why must not change the id");
+    // Pinned: the id of a step with no why, taken before the field was added.
+    assert_eq!(plain, STEP_PLAIN_ID, "id of a step without why drifted: {}", plain);
+    // A step that sets why is a different revision.
+    let mut with = step;
+    with["why"] = json!("So it does not split.");
+    assert_ne!(mk(with.clone()), plain);
+    // And the text survives a round trip.
+    let b: Body = serde_json::from_value(json!({"kind": "preparation", "name": "T", "slots": [], "steps": [with]})).unwrap();
+    let back: serde_json::Value = serde_json::to_value(&b).unwrap();
+    assert_eq!(back["steps"][0]["why"], "So it does not split.");
+}
+const STEP_PLAIN_ID: &str = "12dc9f0dd558c65a4d71218cf1fcd481";
+
+#[test]
 fn malformed_events_are_refused() {
     // A typo is an error, not a silently different event.
     let bad = serde_json::from_value::<Event>(json!({"type": "commit", "node": "p:x", "parnet": "^", "author": "a", "body": {"kind": "concept", "name": "x"}}));

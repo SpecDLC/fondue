@@ -282,13 +282,12 @@ fn parse_recipe(v: &Value) -> Result<RecipeIn, String> {
             }
             uses.push(u.to_string());
         }
-        // `why` is accepted but not stored yet: steps have no such field in this build.
-        if let Some(w) = so.get("why") {
-            if !w.is_null() && !w.is_string() {
-                return Err(format!("{}why: must be a string", path));
-            }
-        }
-        steps.push(Step { verb: text(so, &path, "verb", false)?, text: text(so, &path, "text", false)?, mins, attend, uses, cue: text(so, &path, "cue", true)? });
+        let why = match so.get("why") {
+            None | Some(Value::Null) => String::new(),
+            Some(Value::String(w)) => w.trim().to_string(),
+            Some(_) => return Err(format!("{}why: must be a string", path)),
+        };
+        steps.push(Step { verb: text(so, &path, "verb", false)?, text: text(so, &path, "text", false)?, mins, attend, uses, cue: text(so, &path, "cue", true)?, why });
     }
     Ok(RecipeIn { id, title, serves, slots, steps })
 }

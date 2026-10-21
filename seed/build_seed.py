@@ -87,12 +87,12 @@ def bechamel(fat_bind="i:butter-unsalted", ratio=2, tbsp="4 Tbsp", salt="½ tsp"
                       slot("nutmeg", "nutmeg", "c:nutmeg", "pinch", "i:nutmeg"), *extra_slots],
             "steps": [*extra_steps_front,
                       step("WARM", "Milk to steaming.", 3, ["liquid"], cue="wisps of steam, no bubbles"),
-                      step("MELT", "Fat into the saucepan, medium-low.", 1, ["fat"]),
+                      step("MELT", "Fat into the saucepan, medium-low.", 1, ["fat"], attend=True),
                       step("WHISK", "Flour in all at once. Stir constantly.", 2, ["starch"], attend=True, cue="toasty, still pale"),
                       step("WHISK", "Milk in three pours, smooth each time.", 2, ["liquid"], attend=True, cue="no lumps"),
                       step("SIMMER", simmer_text, simmer, [], cue="nappe: a finger line on the spoon holds"),
-                      step("SALT", "Salt, then taste.", 0.5, ["salt"]),
-                      step("SEASON", "Grate in nutmeg.", 0.5, ["nutmeg"])],
+                      step("SALT", "Salt, then taste.", 0.5, ["salt"], attend=True),
+                      step("SEASON", "Grate in nutmeg.", 0.5, ["nutmeg"], attend=True)],
             "variants": [salted_variant]}
 
 commit("p:bechamel-classic", "curated-core", bechamel(), "Classic béchamel, medium")
@@ -114,7 +114,7 @@ commit("p:mac-and-cheese-nana", "nana", {
               slot("pasta", "pasta", "c:pasta", "8 oz", "i:elbows"),
               slot("cheese", "melting cheese", "c:melting-cheese", "8 oz", "i:cheddar-block")],
     "steps": [step("BOIL", "Elbows into salted water.", 9, ["pasta"], cue="box time − 2"),
-              step("MELT", "Off heat: cheese into the sauce by handfuls.", 2, ["sauce", "cheese"], cue="smooth, no oil slick"),
+              step("MELT", "Off heat: cheese into the sauce by handfuls.", 2, ["sauce", "cheese"], attend=True, cue="smooth, no oil slick"),
               step("FOLD", "Drained pasta into the sauce. Salt to taste.", 1, ["pasta"])],
     "variants": [
         {"when": {"slot": "cheese", "fact": "self_emulsifying", "eq": True},

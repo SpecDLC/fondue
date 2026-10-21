@@ -3,7 +3,9 @@
   "name": "fondue",
   "compatibility_date": "2026-10-01",
   "assets": {
-    "directory": "./dist"
+    "directory": "./dist",
+    // Unknown paths serve dist/404.html with status 404. Routes and the domain stay as they are.
+    "not_found_handling": "404-page"
   },
   // Custom domain: the first `wrangler deploy` creates the DNS record and certificate.
   // The deploy token needs Account Workers Scripts Edit, Zone Workers Routes Edit on specdlc.com, and Zone Read on specdlc.com.

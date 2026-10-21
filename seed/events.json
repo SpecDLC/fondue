@@ -560,7 +560,7 @@
      "uses": [
       "fat"
      ],
-     "attend": false,
+     "attend": true,
      "cue": ""
     },
     {
@@ -598,7 +598,7 @@
      "uses": [
       "salt"
      ],
-     "attend": false,
+     "attend": true,
      "cue": ""
     },
     {
@@ -608,7 +608,7 @@
      "uses": [
       "nutmeg"
      ],
-     "attend": false,
+     "attend": true,
      "cue": ""
     }
    ],
@@ -712,7 +712,7 @@
      "uses": [
       "fat"
      ],
-     "attend": false,
+     "attend": true,
      "cue": ""
     },
     {
@@ -750,7 +750,7 @@
      "uses": [
       "salt"
      ],
-     "attend": false,
+     "attend": true,
      "cue": ""
     },
     {
@@ -760,7 +760,7 @@
      "uses": [
       "nutmeg"
      ],
-     "attend": false,
+     "attend": true,
      "cue": ""
     }
    ],
@@ -865,7 +865,7 @@
      "uses": [
       "fat"
      ],
-     "attend": false,
+     "attend": true,
      "cue": ""
     },
     {
@@ -903,7 +903,7 @@
      "uses": [
       "salt"
      ],
-     "attend": false,
+     "attend": true,
      "cue": ""
     },
     {
@@ -913,7 +913,7 @@
      "uses": [
       "nutmeg"
      ],
-     "attend": false,
+     "attend": true,
      "cue": ""
     }
    ],
@@ -1038,7 +1038,7 @@
      "uses": [
       "fat"
      ],
-     "attend": false,
+     "attend": true,
      "cue": ""
     },
     {
@@ -1076,7 +1076,7 @@
      "uses": [
       "salt"
      ],
-     "attend": false,
+     "attend": true,
      "cue": ""
     },
     {
@@ -1086,7 +1086,7 @@
      "uses": [
       "nutmeg"
      ],
-     "attend": false,
+     "attend": true,
      "cue": ""
     }
    ],
@@ -1193,7 +1193,7 @@
      "uses": [
       "fat"
      ],
-     "attend": false,
+     "attend": true,
      "cue": ""
     },
     {
@@ -1231,7 +1231,7 @@
      "uses": [
       "salt"
      ],
-     "attend": false,
+     "attend": true,
      "cue": ""
     },
     {
@@ -1241,7 +1241,7 @@
      "uses": [
       "nutmeg"
      ],
-     "attend": false,
+     "attend": true,
      "cue": ""
     }
    ],
@@ -1320,7 +1320,7 @@
       "sauce",
       "cheese"
      ],
-     "attend": false,
+     "attend": true,
      "cue": "smooth, no oil slick"
     },
     {
