@@ -10,6 +10,8 @@
 # GitHub does not scope them to an environment. Any job in those repositories can read them.
 # environment: preview adds Patrick as a required reviewer on the jobs that set it.
 # environment: production has no required reviewer. Merging to main is the production approval.
+# Wrangler can print banner or warning lines around --json output, so the preview step
+# extracts the URL tolerantly and never fails the job just because the output is not JSON.
 name: Deploy
 
 on:
@@ -51,8 +53,19 @@ jobs:
         name: Create or update Worker Preview
         run: |
           set -euo pipefail
-          out="$(npx --yes "$WRANGLER" preview --name "pr-${{ github.event.pull_request.number }}" --json)"
-          url="$(printf '%s' "$out" | jq -er '.preview.urls[0]')"
+          log="$RUNNER_TEMP/wrangler-preview.log"
+          npx --yes "$WRANGLER" preview --name "pr-${{ github.event.pull_request.number }}" --json > "$log" 2>&1 || {
+            cat "$log"; echo "wrangler preview failed"; exit 1; }
+          cat "$log"
+          # Prefer the JSON field; fall back to the first https URL in the output.
+          url="$(jq -er '.preview.urls[0]' "$log" 2>/dev/null \
+            || sed -n '/^[[:space:]]*{/,$p' "$log" | jq -er '.preview.urls[0]' 2>/dev/null \
+            || grep -Eo 'https://[A-Za-z0-9._/-]+\.workers\.dev[A-Za-z0-9._/-]*' "$log" | head -n1 \
+            || true)"
+          if [ -z "$url" ]; then
+            echo "::warning::Preview uploaded but no URL could be read from wrangler output."
+            url="(URL not reported; see the Deploy run log)"
+          fi
           echo "url=$url" >> "$GITHUB_OUTPUT"
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
