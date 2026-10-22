@@ -45,6 +45,10 @@ header.top { display: flex; flex-wrap: wrap; justify-content: space-between; ali
 .stats b { font-family: var(--mono); font-size: 17px; }
 .grid { display: grid; grid-template-columns: 300px minmax(0, 1fr); gap: 28px; align-items: start; }
 @media (max-width: 760px) { .grid { grid-template-columns: minmax(0, 1fr); } }
+/* The privacy note: in full on wide screens, one tappable line on phones (it opens in place). */
+#privacy-box { margin: 8px 0 0; }
+#privacy-box > summary { cursor: pointer; min-height: 24px; }
+@media (min-width: 761px) { #privacy-box > summary { display: none; } }
 .cmp { display: flex; flex-direction: column; gap: 28px; }
 .cmp2 { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 28px; align-items: start; }
 @media (max-width: 900px) { .cmp2 { grid-template-columns: minmax(0, 1fr); } }
@@ -181,7 +185,10 @@ body { padding-bottom: var(--ag-h, 44px); }
       <a href="#engine" data-route="engine">Under the hood</a>
     </nav>
   </header>
-  <p class="note" id="privacy" style="margin:8px 0 0;max-width:75ch">Recipes and choices stay in this browser. The only server-side measurement is Cloudflare Web Analytics, and it is there to improve the product. A review saw the beacon send the page path, referrer, browser and OS, country, and page-load timings. Cloudflare says Web Analytics uses no cookies or localStorage for tracking and does not fingerprint visitors. A visitor who wants no analytics can run <span class="mono">./build.sh</span> and open the self-contained page locally. Cloudflare does not add the beacon there. Fonts still load from the font host unless they are self-hosted.</p>
+  <details id="privacy-box" class="privacy" open>
+    <summary class="note">Privacy: what this page keeps and measures</summary>
+    <p class="note" id="privacy" style="margin:8px 0 0;max-width:75ch">Recipes and choices stay in this browser. The only server-side measurement is Cloudflare Web Analytics, and it is there to improve the product. A review saw the beacon send the page path, referrer, browser and OS, country, and page-load timings. Cloudflare says Web Analytics uses no cookies or localStorage for tracking and does not fingerprint visitors. A visitor who wants no analytics can run <span class="mono">./build.sh</span> and open the self-contained page locally. Cloudflare does not add the beacon there. Fonts still load from the font host unless they are self-hosted.</p>
+  </details>
   <div class="toast" id="toast" role="status"></div>
 
   <div id="boot" class="boot">Loading the WASM engine…</div>
@@ -278,7 +285,7 @@ body { padding-bottom: var(--ag-h, 44px); }
 <aside id="agent" hidden aria-label="Agent activity">
   <div class="ag-head"><span class="ag-dot" aria-hidden="true"></span><span id="ag-status" role="status">No agent connected</span></div>
   <div id="ag-confirm" role="alert"></div>
-  <ol id="ag-lines" aria-label="What the agent did"></ol>
+  <ol id="ag-lines" aria-label="What you and the agent changed"></ol>
 </aside>
 
 <script>
@@ -308,6 +315,8 @@ function call(cmd) {
     throw new Error("The engine hit an internal error and restarted from your saved log.");
   }
 }
+/* The seed this browser's saved log was built on: { id, len }. Stored next to fondue.log.v2. */
+const SEED_KEY = "fondue.seed.v2";
 function lastGoodLog() { try { const s = localStorage.getItem("fondue.log.v2"); if (s) return JSON.parse(s); } catch (e) {} return JSON.parse(seedJson); }
 function callOnce(cmd) {
   const b = enc.encode(JSON.stringify(cmd));
@@ -329,7 +338,8 @@ function append(event) {
 }
 
 function profile() { return call({ op: "profile", cook: COOK }); }
-function pref(set) { append({ type: "pref", cook: COOK, set }); render(); }
+/* A hand edit goes through the same command layer as window.fondue: the act appends its events and an edit record with its Undo. */
+function pref(set) { humanAct(() => acts.pref(set)); }
 
 function segmented(el, items, current, onPick) {
   el.innerHTML = items.map(([v, l]) => `<button type="button" data-v="${esc(v)}" aria-pressed="${v === current}">${esc(l)}</button>`).join("");
@@ -484,6 +494,8 @@ function render() {
       : e.type === "cook_log" ? `${e.cook} rated ${e.node}@${short(e.rev)} ${e.rating}`
       : e.type === "session" ? `${e.cook}: ${e.session.active ? "cooking " + e.session.recipe + " step " + (e.session.step + 1) : e.session.recipe || "no recipe open"}`
       : e.type === "retract" ? `took back #${e.seq}`
+      : e.type === "edit" ? `${e.by === "agent" ? "agent" : e.by}: ${e.text}`
+      : e.type === "undo" ? `undoes: #${String(e.undoes).padStart(3, "0")} ${(log[e.undoes] && log[e.undoes].text) || ""}`
       : e.type === "head" ? `${e.scope} → ${e.node}@${short(e.rev)}` : e.type === "canon" ? e.canon.id
       : `${e.node || ""} ${e.label || ""}`;
     return `#${String(n).padStart(3, "0")}  ${e.type.padEnd(9)} ${what}`;
@@ -493,11 +505,25 @@ function render() {
 /* ---- publish and reset: one place each, used by the person's buttons and by the agent's confirmed calls ---- */
 function resetLog() {
   const was = call({ op: "events" });
-  try { localStorage.removeItem("fondue.log.v2"); } catch (e) {}
-  call({ op: "load", events: JSON.parse(seedJson) }); lastLock = []; unfolded.clear(); agent.lines = []; ui.finished = null; ui.tab = null; render(); toast("Reset to the seed log.");
+  try { localStorage.removeItem("fondue.log.v2"); localStorage.removeItem("fondue.log.v2.previous"); } catch (e) {}
+  call({ op: "load", events: JSON.parse(seedJson) }); lastLock = []; unfolded.clear(); agent.lines = []; ui.finished = null; ui.tab = null;
   // What the reset took away, as events to add back after the seed (the log always starts with the seed).
   const seedLen = JSON.parse(seedJson).length;
-  return was.slice(seedLen);
+  const tail = was.slice(seedLen);
+  // The reset replaced the log, so its Undo can't live in the log. Keep it next to the log, so it survives a reload.
+  try { if (tail.length) localStorage.setItem(RESET_KEY, JSON.stringify({ seedLen, tail })); else localStorage.removeItem(RESET_KEY); } catch (e) {}
+  render(); toast("Reset to the seed log.");
+  return tail;
+}
+const RESET_KEY = "fondue.reset.v1";
+function resetBackup() { try { const r = JSON.parse(localStorage.getItem(RESET_KEY) || "null"); return r && Array.isArray(r.tail) && r.tail.length ? r : null; } catch (e) { return null; } }
+/* Undo a reset: only while nothing has been added since, so the old events land at the same positions. */
+function undoReset() {
+  const r = resetBackup(); if (!r) return;
+  if (call({ op: "events" }).length !== r.seedLen) { toast("The reset can't be undone: there are changes since. Nothing was changed.", true); return; }
+  try { for (const e of r.tail) rawAppend(e); localStorage.removeItem(RESET_KEY); refreshNames(); toast("Reset undone."); }
+  catch (e) { call({ op: "load", events: lastGoodLog() }); toast("The reset can't be undone: " + e.message, true); }
+  render();
 }
 /* Returns { ok, undo } or { ok: false, error }. `loud` also shows the error on the page. */
 function forkSource() {
@@ -525,14 +551,14 @@ function publishFork({ name, ratio, fat }, loud) {
     forked_from: { node: src.node, rev: src.rev }, ...(exists ? { parent: "^" } : {}) });
   if (!c) return { ok: false, error: "Could not save your version" };
   append({ type: "publish", node, rev: "^", by: COOK });
-  pref({ op: "choose", key: MAC + "/sauce", node });
+  append({ type: "pref", cook: COOK, set: { op: "choose", key: MAC + "/sauce", node } });
   const d = call({ op: "diff", a: src.rev, b: call({ op: "catalog" }).find((x) => x.node === node).tips.slice(-1)[0] });
   refreshNames(); toast(`Published ${nameOf(node)}. What changed: ${d.join("; ")}`);
   // The log only grows: Undo puts the pick back, then either points the node at its earlier version or retires a node that was new.
   const undo = [{ type: "pref", cook: COOK, set: { op: "choose", key: MAC + "/sauce", node: prevChoice } }];
   if (exists) undo.push({ type: "head", scope: "main", node, rev: prevTip, by: COOK });
   else undo.push({ type: "session", cook: COOK, session: { ...clone(before), retired: [...new Set([...before.retired, node])] } });
-  return { ok: true, node, title: nameOf(node), changes: d, undo };
+  return { ok: true, node, title: nameOf(node), changes: d, sentence: "Shared " + nameOf(node), undo };
 }
 
 function wire() {
@@ -548,9 +574,9 @@ function wire() {
     else if (b.dataset.refold) { unfolded.delete(b.dataset.refold); render(); }
     else if (b.dataset.keep) { const sel = document.querySelector(`select[data-choose="${CSS.escape(b.dataset.keep)}"]`); pref({ op: "choose", key: b.dataset.keep, node: sel.value }); toast("Saved. We'll remember this pick."); }
     else if (b.dataset.use) { pref({ op: "choose", key: MAC + "/sauce", node: b.dataset.use }); toast("Mac and cheese now uses " + nameOf(b.dataset.use)); }
-    else if (b.dataset.rate) { if (append({ type: "cook_log", cook: COOK, node: b.dataset.rate, rev: b.dataset.rev, rating: +b.dataset.r, note: "" })) { render(); toast(`Rated ${b.dataset.r}. The order is updated.`); } }
+    else if (b.dataset.rate) { humanAct(() => { const r = acts.rate(b.dataset.rate, b.dataset.rev, +b.dataset.r); toast(`Rated ${b.dataset.r}. The order is updated.`); return r; }); }
   });
-  $("fork").onsubmit = (ev) => { ev.preventDefault(); publishFork({ name: $("f-name").value, ratio: +$("f-ratio").value, fat: $("f-fat").value }, true); };
+  $("fork").onsubmit = (ev) => { ev.preventDefault(); const r = publishFork({ name: $("f-name").value, ratio: +$("f-ratio").value, fat: $("f-fat").value }, true); if (r.ok) { record(COOK, r); render(); } };
   $("reset").onclick = () => resetLog();
 }
 
@@ -764,9 +790,39 @@ const acts = {
   finish() {
     const { s, tree } = current();
     putSession({ ...clone(s), active: false, step: 0, timers: [] });
-    return { tree };
+    return { tree, sentence: "Finished cooking" + (tree ? " " + tree.name : ""), undo: [{ type: "session", cook: COOK, session: s }] };
+  },
+  pick(id) {
+    const s = sess();
+    putSession({ recipe: id, active: false, step: 0, serve_at: null, timers: [], retired: s.retired });
+    return { sentence: "Opened " + nameOf(id), undo: [{ type: "session", cook: COOK, session: s }] };
+  },
+  rate(node, rev, rating) {
+    const r = rawAppend({ type: "cook_log", cook: COOK, node, rev, rating, note: "" });
+    return { sentence: "Rated " + nameOf(node) + " " + rating + (rating === 1 ? " star" : " stars"), undo: [{ type: "retract", seq: r.seq, by: COOK }] };
+  },
+  /* Any one profile field, as the page's own controls set it. The undo puts back the value it held. */
+  pref(set) {
+    const p = profile();
+    const prev = set.op === "dial" ? { op: "dial", dial: p.dial }
+      : set.op === "canons" ? { op: "canons", canons: p.canons }
+      : set.op === "pantry" ? { op: "pantry", concept: set.concept, node: p.pantry[set.concept] ?? null }
+      : set.op === "know" ? { op: "know", concept: set.concept, on: p.known.includes(set.concept) }
+      : { op: "choose", key: set.key, node: p.choices[set.key] ?? null };
+    rawAppend({ type: "pref", cook: COOK, set });
+    const what = set.op === "dial" ? "Set the rules to " + set.dial
+      : set.op === "canons" ? "Changed the house style"
+      : set.op === "pantry" ? (set.node ? "Set " + nameOf(set.concept).toLowerCase() + " in your pantry to " + nameOf(set.node) : "Cleared " + nameOf(set.concept).toLowerCase() + " from your pantry")
+      : set.op === "know" ? (set.on ? "Marked " : "Unmarked ") + nameOf(set.concept).toLowerCase() + " as one you know"
+      : set.node ? "Picked " + nameOf(set.node) : "Cleared a pick";
+    return { sentence: what, undo: [{ type: "pref", cook: COOK, set: prev }] };
   },
 };
+/* Every edit, by hand or by an agent, is recorded in the log with the events that put it back. */
+function record(by, res) {
+  if (!res || !res.sentence) return null;
+  return rawAppend({ type: "edit", by, text: res.sentence, undo: res.undo || [] });
+}
 function text(o, k) {
   const v = o[k];
   if (typeof v !== "string" || !v.trim()) throw new Error(k + (v == null ? ": missing" : ": must be text"));
@@ -779,18 +835,34 @@ function renderStatus() {
   $("agent").classList.toggle("on", !!agentOn());
   $("ag-status").textContent = agentOn() ? "Agent connected" : "No agent connected";
 }
+const STRIP_MAX = 20;
+/* The strip is a view of the log: rebuilt from the edit records on every render, so it survives a reload. */
+function stripLines() {
+  let edits = [];
+  try { edits = call({ op: "edits" }); } catch (e) {}
+  const lines = edits.slice(-STRIP_MAX).reverse().map((x) => ({ key: String(x.seq), text: (x.by === "agent" ? "" : "You: ") + x.text, done: x.undone, can: x.can_undo, stale: x.stale, reason: x.reason }));
+  const r = resetBackup();
+  if (r) lines.unshift({ key: "reset", text: "Put everything back to the start", done: false, can: true, stale: call({ op: "events" }).length !== r.seedLen, reason: "The reset can't be undone: there are changes since." });
+  return lines;
+}
 function renderStrip() {
   renderStatus();
-  $("ag-lines").innerHTML = agent.lines.map((l) => `<li class="${l.done ? "undone" : ""}" data-line="${l.n}"><span>${esc(l.text)}</span>${l.done ? `<span class="note">Undone</span>` : !l.undo.length ? `<span class="note">Can't be undone</span>` : `<button type="button" class="act" data-undo="${l.n}">Undo</button>`}</li>`).join("");
+  $("ag-lines").innerHTML = stripLines().map((l) => `<li class="${l.done ? "undone" : ""}" data-line="${l.key}"><span>${esc(l.text)}</span>${l.done ? `<span class="note">Undone</span>` : !l.can ? `<span class="note">Can't be undone</span>` : l.stale ? `<span class="note" title="${esc(l.reason)}">Changed since</span> <button type="button" class="act" disabled title="${esc(l.reason)}">Undo</button>` : `<button type="button" class="act" data-undo="${l.key}">Undo</button>`}</li>`).join("");
   $("ag-confirm").innerHTML = pending.map((q) => `<div class="ag-ask"><span>${esc(q.text)}</span><span><button type="button" class="act primary" data-confirm="${q.n}">${esc(q.label)}</button> <button type="button" class="act" data-dismiss="${q.n}">Not now</button></span></div>`).join("");
   document.documentElement.style.setProperty("--ag-h", $("agent").offsetHeight + 8 + "px");
 }
-function undoLine(n) {
-  const l = agent.lines.find((x) => x.n === n);
-  if (!l || l.done) return;
-  try { for (const e of l.undo) rawAppend(e); l.done = true; ui.msg = ""; }
-  catch (e) { ui.msg = "Could not undo: " + e.message; }
+function undoLine(key) {
+  if (key === "reset") return undoReset();
+  try { rawAppend({ type: "undo", undoes: +key, by: COOK }); ui.msg = ""; refreshNames(); }
+  catch (e) { ui.msg = e.message; toast(e.message, true); }   /* a stale or repeated Undo is refused by the engine, in plain words */
   render();
+}
+/* Ctrl+Z / Cmd+Z outside a text field: Undo the most recent edit that hasn't been undone. */
+function undoLatest() {
+  const l = stripLines().find((x) => !x.done && x.can);
+  if (!l) return toast("Nothing to undo.");
+  if (l.stale) return toast(l.reason, true);
+  undoLine(l.key);
 }
 
 /* ---- window.fondue ---- */
@@ -803,7 +875,7 @@ function tool(write, fn) {
       if (input != null && (typeof input !== "object" || Array.isArray(input)) && fn.accepts !== "any") throw new Error("input: must be an object");
       const res = fn(input == null ? {} : input);
       if (!write) return { ok: true, ...res };
-      agent.lines.unshift({ n: ++agent.n, text: res.sentence, undo: res.undo, done: false });
+      record("agent", res);
       renderStrip();
       queueMicrotask(render);
       return { ok: true, ...res.data };
@@ -826,7 +898,7 @@ function confirmPending(n, trusted) {
   const q = pending[i];
   if (q.dismiss || !trusted) { if (q.dismiss) pending.splice(i, 1); renderStrip(); return; }
   pending.splice(i, 1);
-  try { const r = q.run(); agent.lines.unshift({ n: ++agent.n, text: r.sentence, undo: r.undo, done: false }); ui.msg = ""; }
+  try { const r = q.run(); if (q.kind !== "reset") record("agent", r); ui.msg = ""; }
   catch (e) { ui.msg = "Could not finish: " + e.message; }
   render();
 }
@@ -845,7 +917,7 @@ const forkTool = (input) => {
   return askPerson("publish", `An agent wants to share your version "${name}" (${ratio} Tbsp per cup).`, "Share it", () => {
     const r = publishFork({ name, ratio, fat }, false);
     if (!r.ok) throw new Error(r.error);
-    return { sentence: "Shared " + r.title, undo: r.undo };
+    return { sentence: r.sentence, undo: r.undo };
   });
 };
 const resetTool = () => askPerson("reset", "An agent wants to put everything back the way it started and clear your history.", "Put it back", () => ({ sentence: "Put everything back to the start", undo: resetLog() }));
@@ -1003,7 +1075,7 @@ function renderCook() {
 }
 
 function humanAct(fn) {
-  try { fn(); ui.msg = ""; } catch (e) { ui.msg = e.message; }
+  try { record(COOK, fn()); ui.msg = ""; } catch (e) { ui.msg = e.message; toast(e.message, true); }
   render();
 }
 function wireCook() {
@@ -1016,14 +1088,14 @@ function wireCook() {
   $("ck-pane").addEventListener("click", (ev) => {
     const b = ev.target.closest("button[data-act]"); if (!b) return;
     const s = lastSess, a = b.dataset.act;
-    if (a === "pick") humanAct(() => putSession({ recipe: b.dataset.id, active: false, step: 0, serve_at: null, timers: [], retired: s.retired }));
-    else if (a === "start") humanAct(() => { acts.start({ id: s.recipe, serve_at: ui.serve.trim() || null }); ui.tab = "cook"; });
+    if (a === "pick") humanAct(() => acts.pick(b.dataset.id));
+    else if (a === "start") humanAct(() => { const r = acts.start({ id: s.recipe, serve_at: ui.serve.trim() || null }); ui.tab = "cook"; return r; });
     else if (a === "next") humanAct(() => acts.move(1));
     else if (a === "prev") humanAct(() => acts.move(-1));
     else if (a === "timer") humanAct(() => acts.timer({}));
     else if (a === "untimer") humanAct(() => acts.untimer({ id: b.dataset.id }));
-    else if (a === "finish") humanAct(() => { const r = acts.finish(); ui.finished = r.tree ? { title: r.tree.name } : null; });
-    else if (a === "rate") humanAct(() => { const t = current().tree; if (t) rawAppend({ type: "cook_log", cook: COOK, node: t.node, rev: t.rev, rating: +b.dataset.r, note: "" }); ui.finished = null; });
+    else if (a === "finish") humanAct(() => { const r = acts.finish(); ui.finished = r.tree ? { title: r.tree.name } : null; return r; });
+    else if (a === "rate") humanAct(() => { const t = current().tree; ui.finished = null; return t ? acts.rate(t.node, t.rev, +b.dataset.r) : null; });
     else if (a === "skiprate") humanAct(() => { ui.finished = null; });
     else if (a === "paste") {
       ui.msg = "";
@@ -1035,7 +1107,7 @@ function wireCook() {
         catch (e) { recipe = undefined; }
         if (recipe === undefined) ui.pasteErr = "That is not a recipe I can read. Check the text and try again.";
         else {
-          try { acts.load(recipe); ui.paste = ""; ui.pasteErr = ""; }
+          try { record(COOK, acts.load(recipe)); ui.paste = ""; ui.pasteErr = ""; }
           catch (e) {
             const m = String(e.message || "");
             ui.pasteErr = /not valid JSON|Unexpected |in JSON at position|Expected property/i.test(m)
@@ -1052,21 +1124,46 @@ function wireCook() {
     if (c) confirmPending(+c.dataset.confirm, ev.isTrusted);   /* a click made by script is not a person */
     else if (d) { const q = pending.find((x) => x.n === +d.dataset.dismiss); if (q) q.dismiss = true; confirmPending(+d.dataset.dismiss, true); }
   });
-  $("ag-lines").addEventListener("click", (ev) => { const b = ev.target.closest("button[data-undo]"); if (b) undoLine(+b.dataset.undo); });
+  $("ag-lines").addEventListener("click", (ev) => { const b = ev.target.closest("button[data-undo]"); if (b) undoLine(b.dataset.undo); });
+  document.addEventListener("keydown", (ev) => {
+    if (!(ev.ctrlKey || ev.metaKey) || ev.shiftKey || ev.altKey || ev.key.toLowerCase() !== "z") return;
+    if (ev.target.closest && ev.target.closest("input, textarea, select, [contenteditable]")) return;
+    ev.preventDefault(); undoLatest();
+  });
   setInterval(tick, 1000);
 }
 
 (async function boot() {
+  if (window.matchMedia && matchMedia("(max-width: 760px)").matches) $("privacy-box").open = false;
   try {
     BIN = Uint8Array.from(atob(WASM_B64), (c) => c.charCodeAt(0));
     await instantiate();
     $("s-wasm").textContent = Math.round(BIN.length / 1024) + " KB";
     seedJson = readOut(X.fd_seed())[0];
-    let events = JSON.parse(seedJson);
-    try { const saved = localStorage.getItem("fondue.log.v2"); if (saved) events = JSON.parse(saved); } catch (e) {}
-    try { call({ op: "load", events }); } catch (e) { call({ op: "load", events: JSON.parse(seedJson) }); }
+    const seed = JSON.parse(seedJson);
+    const seedId = call({ op: "seed_id", events: seed });
+    let saved = null, was = null;
+    try { saved = localStorage.getItem("fondue.log.v2"); was = JSON.parse(localStorage.getItem(SEED_KEY) || "null"); } catch (e) {}
+    let note = "";
+    if (!saved) call({ op: "load", events: seed });
+    else if (was && was.id === seedId) {
+      try { call({ op: "load", events: JSON.parse(saved) }); } catch (e) { call({ op: "load", events: seed }); }
+    } else {
+      /* The seed changed since this log was saved: start from the new seed and replay this visitor's own
+         settings, ratings and place in a cook. The old log is kept next to it, so nothing is lost. */
+      try {
+        const r = call({ op: "rebase", seed, saved: JSON.parse(saved), ...(was && Number.isInteger(was.len) ? { saved_seed_len: was.len } : {}) });
+        try { localStorage.setItem("fondue.log.v2.previous", saved); } catch (e) {}
+        save();
+        note = "The recipes were updated. Your settings and ratings were kept" + (r.skipped ? ` (${r.skipped} no longer fit and were left out)` : "") + ".";
+      } catch (e) {
+        try { call({ op: "load", events: JSON.parse(saved) }); } catch (e2) { call({ op: "load", events: seed }); }
+      }
+    }
+    try { if (!saved || (was && was.id === seedId) || note) localStorage.setItem(SEED_KEY, JSON.stringify({ id: seedId, len: seed.length })); } catch (e) {}
     wire(); wireCook(); $("agent").hidden = false; render();
     $("boot").hidden = true; showRoute(); window.addEventListener("hashchange", showRoute);
+    if (note) toast(note);
   } catch (e) {
     $("boot").textContent = "The engine did not start: " + e.message;
   }

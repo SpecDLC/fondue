@@ -69,6 +69,36 @@ pub enum Event {
     /// Take back a `CookLog` by its position in the log. The log itself is never
     /// edited: this event removes the outcome from the projection.
     Retract { seq: usize, by: String },
+    /// Names one edit, made by hand or by an agent, and the events that put it
+    /// back. Appended right after the edit's own events. `after` is filled in by
+    /// the engine: the value each undo event's field held once the edit was made,
+    /// so a later Undo can tell whether that field has changed since.
+    Edit {
+        by: String,
+        text: String,
+        #[serde(default)]
+        undo: Vec<Event>,
+        #[serde(default)]
+        after: Vec<Value>,
+    },
+    /// Reverse the edit recorded at `undoes` by applying its undo events. One
+    /// labeled event; the log only grows. Refused if that edit was already
+    /// undone, or if any field it set has changed since.
+    Undo { undoes: usize, by: String },
+}
+
+fn field_name(ev: &Event) -> &'static str {
+    match ev {
+        Event::Pref { set: PrefOp::Pantry { .. }, .. } => "that pantry item",
+        Event::Pref { set: PrefOp::Choose { .. }, .. } => "that pick",
+        Event::Pref { set: PrefOp::Dial { .. }, .. } => "the rules setting",
+        Event::Pref { set: PrefOp::Canons { .. }, .. } => "the house style",
+        Event::Pref { set: PrefOp::Know { .. }, .. } => "that \"I know this\" setting",
+        Event::Session { .. } => "the cook in progress",
+        Event::Head { .. } => "that recipe's version",
+        Event::Retract { .. } => "that rating",
+        _ => "something it changed",
+    }
 }
 
 /// A cook's moment-to-moment state. Not a kitchen setting.
@@ -150,6 +180,8 @@ pub struct State {
     pub labels: Vec<LabelRec>,
     pub published: BTreeSet<RevId>,
     pub sessions: BTreeMap<String, Session>,
+    /// Seqs of `Edit` records that have been undone.
+    pub undone: BTreeSet<usize>,
 }
 
 // ---------- content ids ----------
@@ -219,6 +251,12 @@ fn write_canonical(v: &Value, out: &mut String) {
         }
         other => out.push_str(&serde_json::to_string(other).unwrap()),
     }
+}
+
+/// A short content id for any JSON value (used for the seed id).
+pub fn digest(v: &Value) -> String {
+    let c = canonical_json(v);
+    format!("{:016x}{:016x}", fnv1a(c.as_bytes(), 0xcbf29ce484222325), fnv1a(c.as_bytes(), 0x84222325cbf29ce4))
 }
 
 pub fn canonical_json(v: &Value) -> String {
@@ -308,6 +346,79 @@ impl State {
     /// Apply one event. On error nothing changes. Returns a short description.
     pub fn apply(&mut self, ev: Event) -> Result<String, String> {
         let seq = self.log.len();
+        match ev {
+            Event::Edit { by, text, undo, .. } => {
+                if text.trim().is_empty() {
+                    return Err("edit: text is missing".into());
+                }
+                if undo.iter().any(|u| matches!(u, Event::Edit { .. } | Event::Undo { .. })) {
+                    return Err("edit: undo events cannot be edits or undos".into());
+                }
+                let after = undo.iter().map(|u| self.probe(u)).collect();
+                let out = format!("edit by {}: {}", by, text);
+                self.log.push(Event::Edit { by, text, undo, after });
+                return Ok(out);
+            }
+            Event::Undo { undoes, by } => {
+                let (text, undo) = self.check_undo(undoes)?;
+                // Apply the undo events on a scratch copy; keep the projection, not their log entries.
+                let mut next = self.clone();
+                for u in undo {
+                    next.apply(u).map_err(|e| format!("This can't be undone: {}. Nothing was changed.", e))?;
+                }
+                next.log.truncate(seq);
+                next.undone.insert(undoes);
+                *self = next;
+                self.log.push(Event::Undo { undoes, by });
+                return Ok(format!("undo #{}: {}", undoes, text));
+            }
+            ev => self.apply_plain(ev, seq),
+        }
+    }
+
+    /// The current value of the field an undo event would write, or null for
+    /// events that write no single field.
+    pub fn probe(&self, ev: &Event) -> Value {
+        use serde_json::json;
+        match ev {
+            Event::Pref { cook, set } => {
+                let p = self.profiles.get(cook).cloned().unwrap_or_else(|| Profile { cook: cook.clone(), ..Default::default() });
+                match set {
+                    PrefOp::Dial { .. } => json!(p.dial),
+                    PrefOp::Canons { .. } => json!(p.canons),
+                    PrefOp::Pantry { concept, .. } => json!(p.pantry.get(concept)),
+                    PrefOp::Know { concept, .. } => json!(p.known.contains(concept)),
+                    PrefOp::Choose { key, .. } => json!(p.choices.get(key)),
+                }
+            }
+            Event::Session { cook, .. } => json!(self.sessions.get(cook).cloned().unwrap_or_default()),
+            Event::Head { scope, node, .. } => json!(self.heads.get(scope).and_then(|m| m.get(node))),
+            Event::Retract { seq, .. } => json!(self.logs.iter().any(|l| l.seq == *seq)),
+            _ => Value::Null,
+        }
+    }
+
+    /// Why the edit at `seq` can't be undone now, in plain words, or its text and undo events.
+    pub fn check_undo(&self, seq: usize) -> Result<(String, Vec<Event>), String> {
+        let (text, undo, after) = match self.log.get(seq) {
+            Some(Event::Edit { text, undo, after, .. }) => (text, undo, after),
+            _ => return Err(format!("#{} is not an edit that can be undone", seq)),
+        };
+        if undo.is_empty() {
+            return Err(format!("\"{}\" can't be undone.", text));
+        }
+        if self.undone.contains(&seq) {
+            return Err(format!("\"{}\" was already undone.", text));
+        }
+        for (u, a) in undo.iter().zip(after.iter()) {
+            if &self.probe(u) != a {
+                return Err(format!("\"{}\" can't be undone: {} has changed since. Nothing was changed.", text, field_name(u)));
+            }
+        }
+        Ok((text.clone(), undo.clone()))
+    }
+
+    fn apply_plain(&mut self, ev: Event, seq: usize) -> Result<String, String> {
         // Resolve aliases first; `stored` is what goes in the log.
         let stored = match ev {
             Event::Commit { node, parent, author, msg, body, forked_from } => {
@@ -448,6 +559,7 @@ impl State {
                 }
                 format!("retract cook_log #{}", seq)
             }
+            Event::Edit { .. } | Event::Undo { .. } => unreachable!("handled in apply"),
         };
         self.log.push(stored);
         Ok(out)
