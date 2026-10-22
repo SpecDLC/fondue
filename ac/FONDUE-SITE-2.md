@@ -6,4 +6,4 @@
 
 **Forbids.** A median single resolve over 5 ms in the smoke test on a CI runner.
 
-**Done when.** The smoke test output in CI shows 200 views under 1,000 ms. (Threshold is a proposal.)
+**Done when.** The smoke test output in CI shows 200 views under 1,000 ms. `web/smoke.mjs` exits non-zero when 200 views take 1,000 ms or more, so a slow engine fails the run, and it writes the line "200 views: N ms" to the job summary (`$GITHUB_STEP_SUMMARY`) so the number can be read without opening the job log. (Threshold is a proposal.)
